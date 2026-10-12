@@ -458,7 +458,7 @@ input:checked + .slider:before {
 		<button class="et-restart-btn" id="restartBtn" onclick="restartService(); return false;"><%=translate("Restart")%></button>
 	</div>
 	<div class="et-action-row">
-		<div class="et-action-label">EasyTier Core</div>
+		<div class="et-action-label">ET Core</div>
 		<div class="et-action-controls">
 			<label class="switch">
 				<input type="checkbox" id="coreSwitch" disabled>
@@ -467,7 +467,7 @@ input:checked + .slider:before {
 		</div>
 	</div>
 	<div class="et-action-row">
-		<div class="et-action-label">EasyTier Web</div>
+		<div class="et-action-label">ET Web</div>
 		<div class="et-action-controls">
 			<label class="switch">
 				<input type="checkbox" id="webSwitch" disabled>
@@ -671,7 +671,7 @@ function updateStatus(data) {
 	if (!data || !container) return;
 	
 	var html = '';
-	html += renderService('EasyTier Core', {
+	html += renderService('ET Core', {
 		cpu: data.etcpu,
 		mem: data.etram,
 		uptime: data.etsta,
@@ -679,7 +679,7 @@ function updateStatus(data) {
 		latest: data.etnewtag
 	}, data.crunning);
 	
-	html += renderService('EasyTier Web', {
+	html += renderService('ET Web', {
 		cpu: data.etwebcpu,
 		mem: data.etwebram,
 		uptime: data.etwebsta,
@@ -1110,7 +1110,7 @@ XHR.poll(3, '<%=url("admin", "vpn", "easytier", "api_status")%>', null, function
 <div class="version-modal" id="restart_modal">
 	<div class="version-modal-content">
 		<div class="version-modal-title"><%=translate("Restart Service")%></div>
-		<div class="version-modal-message"><%=translate("Restart EasyTier service?")%></div>
+		<div class="version-modal-message"><%=translate("Restart ET service?")%></div>
 		<div class="version-modal-buttons">
 			<button class="version-modal-btn version-modal-btn-cancel" onclick="closeRestartModal(); return false;"><%=translate("Cancel")%></button>
 			<button class="version-modal-btn version-modal-btn-confirm" onclick="confirmRestart(); return false;"><%=translate("Confirm")%></button>

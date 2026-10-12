@@ -66,7 +66,7 @@ network_secret.maxlength = 128
 network_secret:depends("etcmd", "etcmd")
 
 ip_dhcp = s:taboption("general", Flag, "ip_dhcp", translate("Enable DHCP"),
-        translate("IP address will be automatically determined and assigned by EasyTier, starting from 10.0.0.1 by default. "
+        translate("IP address will be automatically determined and assigned by ET, starting from 10.0.0.1 by default. "
                 .. "Warning: When using DHCP, if an IP conflict occurs in the network, the IP will be automatically changed. (-d parameter)"))
 ip_dhcp:depends("etcmd", "etcmd")
 
@@ -356,7 +356,7 @@ bind_device:depends("etcmd", "etcmd")
 
 kcp_proxy = s:taboption("privacy", Flag, "kcp_proxy", translate("Enable KCP Proxy"),
         translate("Convert TCP traffic to KCP traffic to reduce latency and improve speed.<br>"
-                .. "All nodes in the virtual network must be using EasyTier version v2.2.0 or higher for this feature. "
+                .. "All nodes in the virtual network must be using ET version v2.2.0 or higher for this feature. "
                 .. "(--enable-kcp-proxy parameter)"))
 kcp_proxy:depends("etcmd", "etcmd")
 
@@ -375,7 +375,7 @@ relay_kcp:depends("etcmd", "etcmd")
 
 quic_proxy = s:taboption("privacy", Flag, "quic_proxy", translate("Enable QUIC Proxy"),
         translate("Proxy tcp streams with QUIC, improving the latency and throughput on the network with udp packet loss.<br>"
-                .. "All nodes in the virtual network must be using EasyTier version v2.3.2 or higher for this feature. "
+                .. "All nodes in the virtual network must be using ET version v2.3.2 or higher for this feature. "
                 .. "(--enable-quic-proxy parameter)"))
 quic_proxy:depends("etcmd", "etcmd")
 
@@ -443,11 +443,11 @@ log:value("trace", translate("Trace"))
 
 -- Network Configuration Options
 auto_config_interface = s:taboption("privacy", Flag, "auto_config_interface", translate("Auto Configure Interface"),
-        translate("Automatically create and configure the EasyTier network interface"))
+        translate("Automatically create and configure the ET network interface"))
 auto_config_interface.default = "1"
 
 interface_netmask = s:taboption("privacy", Value, "interface_netmask", translate("Interface Netmask"),
-        translate("Subnet mask for the EasyTier interface (default: 255.0.0.0)"))
+        translate("Subnet mask for the ET interface (default: 255.0.0.0)"))
 interface_netmask.placeholder = "255.0.0.0"
 interface_netmask.default = "255.0.0.0"
 interface_netmask.datatype = "ip4addr"
@@ -459,17 +459,17 @@ auto_config_firewall.default = "1"
 
 et_forward = s:taboption("privacy", MultiValue, "et_forward", translate("Access Control"),
         translate("Set traffic permission rules between different network zones"))
-et_forward:value("etfwlan", translate("Allow traffic from EasyTier virtual network to LAN"))
-et_forward:value("etfwwan", translate("Allow traffic from EasyTier virtual network to WAN"))
-et_forward:value("lanfwet", translate("Allow traffic from LAN to EasyTier virtual network"))
-et_forward:value("wanfwet", translate("Allow traffic from WAN to EasyTier virtual network"))
+et_forward:value("etfwlan", translate("Allow traffic from ET virtual network to LAN"))
+et_forward:value("etfwwan", translate("Allow traffic from ET virtual network to WAN"))
+et_forward:value("lanfwet", translate("Allow traffic from LAN to ET virtual network"))
+et_forward:value("wanfwet", translate("Allow traffic from WAN to ET virtual network"))
 et_forward.rmempty = true
 et_forward.optional = true
 et_forward:depends("auto_config_firewall", "1")
 
 check = s:taboption("privacy", Flag, "check", translate("Connectivity Check"),
         translate("Enable connectivity check to specify remote device IPs; if all specified IPs fail to ping, "
-                .. "the EasyTier program will restart."))
+                .. "the ET program will restart."))
 
 checkip = s:taboption("privacy", DynamicList, "checkip", translate("Check IPs"),
         translate("Make sure the remote device IPs entered here are correct and reachable; "

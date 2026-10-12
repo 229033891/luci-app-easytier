@@ -48,10 +48,10 @@ function index()
 	end
 	
 	entry({"admin", "vpn"}, firstchild(), "VPN", 45).dependent = false
-	entry({"admin", "vpn", "easytier"}, firstchild(),_("EasyTier"), 46).dependent = true
+	entry({"admin", "vpn", "easytier"}, firstchild(),_("ET"), 46).dependent = true
 	entry({"admin", "vpn", "easytier", "status"}, cbi("easytier_status"),_("Status"), 1).leaf = true
-	entry({"admin", "vpn", "easytier", "config"}, cbi("easytier"),_("EasyTier Core"), 2).leaf = true
-	entry({"admin", "vpn", "easytier", "webconsole"}, template("easytier/easytier_web"),_("EasyTier Web"), 3).leaf = true
+	entry({"admin", "vpn", "easytier", "config"}, cbi("easytier"),_("ET Core"), 2).leaf = true
+	entry({"admin", "vpn", "easytier", "webconsole"}, template("easytier/easytier_web"),_("ET Web"), 3).leaf = true
 	entry({"admin", "vpn", "easytier", "log"}, template("easytier/easytier_log"),_("Logs"), 4).leaf = true
 	entry({"admin", "vpn", "easytier", "upload"}, template("easytier/easytier_upload"),_("Upload Program"), 5).leaf = true
 	entry({"admin", "vpn", "easytier", "upload_binary"}, call("upload_binary")).leaf = true
@@ -490,7 +490,7 @@ function upload_binary()
 		
 		if #valid_bins == 0 then
 			os.execute("rm -rf " .. extract_dir)
-			http.write_json({success = false, message = translate("Not a valid EasyTier program or architecture mismatch")})
+			http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 			return
 		end
 		
@@ -520,7 +520,7 @@ function upload_binary()
 			if not test_binary(final_path) then
 				os.execute("rm -f " .. final_path)
 				os.execute("rm -rf " .. extract_dir)
-				http.write_json({success = false, message = translate("Not a valid EasyTier program or architecture mismatch")})
+				http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 				return
 			end
 		end
@@ -537,7 +537,7 @@ function upload_binary()
 		
 		if not valid_names[filename] then
 			cleanup_files(tmp_file)
-			http.write_json({success = false, message = translate("Not a valid EasyTier program")})
+			http.write_json({success = false, message = translate("Not a valid ET program")})
 			return
 		end
 		
@@ -550,7 +550,7 @@ function upload_binary()
 		nixio.fs.chmod(tmp_file, "755")
 		if not test_binary(tmp_file) then
 			cleanup_files(tmp_file)
-			http.write_json({success = false, message = translate("Not a valid EasyTier program or architecture mismatch")})
+			http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 			return
 		end
 		
@@ -578,7 +578,7 @@ function upload_binary()
 		os.execute("chmod 755 " .. final_path)
 		if not test_binary(final_path) then
 			os.execute("rm -f " .. final_path)
-			http.write_json({success = false, message = translate("Not a valid EasyTier program or architecture mismatch")})
+			http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 			return
 		end
 		

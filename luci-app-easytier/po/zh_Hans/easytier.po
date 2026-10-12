@@ -34,28 +34,28 @@ msgid "Allow this node to act as an exit node (--enable-exit-node parameter)"
 msgstr "允许此节点成为出口节点 （--enable-exit-node 参数）"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:383
-msgid "Allow traffic from EasyTier virtual network to LAN"
-msgstr "允许从虚拟网络 EasyTier 到局域网 lan 的流量"
+msgid "Allow traffic from ET virtual network to LAN"
+msgstr "允许从虚拟网络 ET 到局域网 lan 的流量"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:384
-msgid "Allow traffic from EasyTier virtual network to WAN"
-msgstr "允许从虚拟网络 EasyTier 到广域网 wan 的流量"
+msgid "Allow traffic from ET virtual network to WAN"
+msgstr "允许从虚拟网络 ET 到广域网 wan 的流量"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:385
-msgid "Allow traffic from LAN to EasyTier virtual network"
-msgstr "允许从局域网 lan 到虚拟网络 EasyTier 的流量"
+msgid "Allow traffic from LAN to ET virtual network"
+msgstr "允许从局域网 lan 到虚拟网络 ET 的流量"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:386
-msgid "Allow traffic from WAN to EasyTier virtual network"
-msgstr "允许从广域网 wan 到虚拟网络 EasyTier 的流量"
+msgid "Allow traffic from WAN to ET virtual network"
+msgstr "允许从广域网 wan 到虚拟网络 ET 的流量"
 
 msgid "System lacks unzip package, cannot extract zip archive"
 msgstr "当前系统缺少unzip包无法解压zip程序包"
 
-msgid "Not a valid EasyTier program or architecture mismatch"
+msgid "Not a valid ET program or architecture mismatch"
 msgstr "上传的不是有效easytier程序或架构不匹配"
 
-msgid "Not a valid EasyTier program"
+msgid "Not a valid ET program"
 msgstr "不是有效的easytier程序"
 
 msgid "easytier-web is not used by this plugin, please upload easytier-web-embed"
@@ -147,16 +147,16 @@ msgstr "connector信息"
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:332
 msgid ""
 "Convert TCP traffic to KCP traffic to reduce latency and improve speed."
-"<br>All nodes in the virtual network must be using EasyTier version v2.2.0 "
+"<br>All nodes in the virtual network must be using ET version v2.2.0 "
 "or higher for this feature. (--enable-kcp-proxy parameter)"
-msgstr "将TCP流量转为 KCP 流量，降低传输延迟，提升传输速度。<br>KCP 代理功能需要虚拟网内所有节点的 EasyTier 版本在 v2.2.0 以上。（ --enable-kcp-proxy 参数）"
+msgstr "将TCP流量转为 KCP 流量，降低传输延迟，提升传输速度。<br>KCP 代理功能需要虚拟网内所有节点的 ET 版本在 v2.2.0 以上。（ --enable-kcp-proxy 参数）"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:343
 msgid ""
 "Proxy tcp streams with QUIC, improving the latency and throughput on the network with udp packet loss."
-"<br>All nodes in the virtual network must be using EasyTier version v2.3.2 or higher for this feature. "
+"<br>All nodes in the virtual network must be using ET version v2.3.2 or higher for this feature. "
 "(--enable-quic-proxy parameter)"
-msgstr "使用 QUIC 代理 TCP 流，提高在 UDP 丢包网络上的延迟和吞吐量。<br>QUIC 代理功能需要虚拟网内所有节点的 EasyTier 版本在 v2.3.2 以上。（ --enable-quic-proxy 参数）"
+msgstr "使用 QUIC 代理 TCP 流，提高在 UDP 丢包网络上的延迟和吞吐量。<br>QUIC 代理功能需要虚拟网内所有节点的 ET 版本在 v2.3.2 以上。（ --enable-quic-proxy 参数）"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:236
 msgid ""
@@ -281,8 +281,11 @@ msgid "Do not use IPv6 (--disable-ipv6 parameter)"
 msgstr "不使用ipv6 （--disable-ipv6 参数）"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:14
-msgid "EasyTier Configuration"
-msgstr "EasyTier配置"
+
+msgid "ET"
+msgstr "ET"
+msgid "ET Configuration"
+msgstr "ET配置"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:22
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:691
@@ -330,7 +333,7 @@ msgstr "启用 socks5 服务器，允许 socks5 客户端访问虚拟网络，�
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:391
 msgid ""
 "Enable connectivity check to specify remote device IPs; if all specified IPs "
-"fail to ping, the EasyTier program will restart."
+"fail to ping, the ET program will restart."
 msgstr "开启通断检测后，可以指定对端的设备IP，当所有指定的IP都ping不通时将会重启easytier程序"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:248
@@ -415,7 +418,7 @@ msgstr "主机名"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:90
 msgid ""
-"IP address will be automatically determined and assigned by EasyTier, "
+"IP address will be automatically determined and assigned by ET, "
 "starting from 10.0.0.1 by default. Warning: When using DHCP, if an IP "
 "conflict occurs in the network, the IP will be automatically changed. (-d "
 "parameter)"
@@ -854,8 +857,8 @@ msgstr "使用魔法DNS，您可以使用域名访问其他节点，例如：<ho
 msgid ""
 "You can directly upload the binary programs easytier-core and easytier-cli, "
 "or a compressed .zip archive. Uploading a new version will automatically "
-"overwrite the old one. Download link: <a href='https://github.com/EasyTier/"
-"EasyTier/releases' target='_blank'>github.com/229033891/EasyTier</a><br>The "
+"overwrite the old one. Download link: <a href='https://github.com/229033891/EasyTier/"
+"ET/releases' target='_blank'>github.com/229033891/EasyTier</a><br>The "
 "uploaded files will be saved in the /tmp folder. If a custom program path is "
 "specified, the program will be automatically moved to that path when started."
 "<br>"
@@ -1006,10 +1009,10 @@ msgstr "转发 KCP"
 msgid "If true, allow relay kcp packets from foreign network. default is false (not forward foreign network kcp packets). (--enable-relay-foreign-network-kcp parameter)"
 msgstr "如果开启，则作为共享节点时也可以转发其他网络的 KCP 数据包。默认关闭（不转发）（ --enable-relay-foreign-network-kcp 参数）"
 
-msgid "EasyTier Core"
-msgstr "EasyTier 配置"
+msgid "ET Core"
+msgstr "ET 配置"
 
-msgid "EasyTier Web"
+msgid "ET Web"
 msgstr "自建控制台"
 
 msgid "All Levels"
@@ -1084,8 +1087,8 @@ msgstr "快捷操作"
 msgid "Restart Service"
 msgstr "重启服务"
 
-msgid "Restart EasyTier service?"
-msgstr "确认重启 EasyTier 服务？"
+msgid "Restart ET service?"
+msgstr "确认重启 ET 服务？"
 
 msgid "Please wait, operation in progress..."
 msgstr "请稍候，操作进行中..."
@@ -1093,8 +1096,8 @@ msgstr "请稍候，操作进行中..."
 msgid "Restarting service..."
 msgstr "正在重启服务..."
 
-msgid "Upload EasyTier Binary"
-msgstr "上传 EasyTier 程序"
+msgid "Upload ET Binary"
+msgstr "上传 ET 程序"
 
 msgid "Drag and drop file here or click to browse"
 msgstr "拖放文件到此处或点击浏览"
@@ -1177,11 +1180,11 @@ msgstr "注意"
 msgid "Files will be uploaded to the paths specified above"
 msgstr "程序文件将上传到上方指定的程序路径"
 
-msgid "EasyTier console uses easytier-web-embed. The easytier-web binary will be rejected during upload validation."
-msgstr "EasyTier 自建控制台使用 easytier-web-embed 上传成功后会更名为easytier-web使用，上传的 easytier-web 程序将在验证时被忽略"
+msgid "ET console uses easytier-web-embed. The easytier-web binary will be rejected during upload validation."
+msgstr "ET 自建控制台使用 easytier-web-embed 上传成功后会更名为easytier-web使用，上传的 easytier-web 程序将在验证时被忽略"
 
 msgid "Compressed archive containing binaries"
-msgstr "包含EasyTier相关程序的压缩包"
+msgstr "包含ET相关程序的压缩包"
 
 msgid "Drag *.tar.gz / *.zip / easytier binaries here or click to select file"
 msgstr "支持拖放 *.tar.gz / *.zip 压缩包和 easytier 二进制程序到此处，或点击选择文件"
@@ -1199,7 +1202,7 @@ msgid "Self-hosted Web Console"
 msgstr "自建 Web 控制台"
 
 msgid "Enable Self-hosted Web Console"
-msgstr "启用EasyTier-web控制台"
+msgstr "启用ET-web控制台"
 
 msgid "Log Level"
 msgstr "日志级别"
@@ -1306,8 +1309,8 @@ msgstr "错误：WireGuard VPN 门户未启动"
 msgid "Refresh"
 msgstr "立即刷新"
 
-msgid "EasyTier Status"
-msgstr "EasyTier 状态总览"
+msgid "ET Status"
+msgstr "ET 状态总览"
 
 msgid "Virtual IP"
 msgstr "虚拟IP"
@@ -1673,7 +1676,7 @@ msgid "Add"
 msgstr "添加"
 
 msgid "Used to accelerate GitHub downloads when fetching binaries online"
-msgstr "用于从GitHub在线下载EasyTier程序使用镜像加速GitHub"
+msgstr "用于从GitHub在线下载ET程序使用镜像加速GitHub"
 
 msgid "Fallback Version"
 msgstr "备用版本"
@@ -1711,14 +1714,14 @@ msgstr "路由CIDR"
 msgid "Auto Configure Interface"
 msgstr "自动配置接口"
 
-msgid "Automatically create and configure the EasyTier network interface"
-msgstr "自动创建并配置 EasyTier 网络接口"
+msgid "Automatically create and configure the ET network interface"
+msgstr "自动创建并配置 ET 网络接口"
 
 msgid "Interface Netmask"
 msgstr "接口子网掩码"
 
-msgid "Subnet mask for the EasyTier interface (default: 255.0.0.0)"
-msgstr "EasyTier 接口的子网掩码（默认值：255.0.0.0）"
+msgid "Subnet mask for the ET interface (default: 255.0.0.0)"
+msgstr "ET 接口的子网掩码（默认值：255.0.0.0）"
 
 msgid "Auto Configure Firewall"
 msgstr "自动配置防火墙"
@@ -1814,8 +1817,8 @@ msgstr "日志"
 msgid "Online Download"
 msgstr "在线下载"
 
-msgid "Online Download EasyTier"
-msgstr "在线下载EasyTier程序"
+msgid "Online Download ET"
+msgstr "在线下载ET程序"
 
 msgid "Download Version"
 msgstr "下载版本"
@@ -1902,7 +1905,7 @@ msgid "Preparing..."
 msgstr "准备中..."
 
 msgid "Downloaded package is incomplete, missing required files"
-msgstr "下载的压缩包不完整，缺少EasyTier相关程序文件"
+msgstr "下载的压缩包不完整，缺少ET相关程序文件"
 
 msgid "Program installation failed, verification failed"
 msgstr "程序安装失败，验证未通过"

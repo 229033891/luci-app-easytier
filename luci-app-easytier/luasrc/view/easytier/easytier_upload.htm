@@ -372,10 +372,10 @@ local translate = i18n.translate
 			<label style="display:flex;align-items:center;font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:4px;">
 				<span><%=translate("Fallback Version")%></span>
 				<a href="https://github.com/229033891/EasyTier/releases" target="_blank" style="margin-left:8px;line-height:1;">
-					<img alt="" src="https://img.shields.io/github/v/tag/229033891/EasyTier?include_prereleases&logo=github&label=tag&link=https%3A%2F%2Fgithub.com%2F229033891%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
+					<img alt="" src="https://img.shields.io/github/v/tag/229033891/EasyTier?include_prereleases&logo=github&label=tag&link=https%3A%2F%2Fgithub.com%2F229033891%2FET%2Freleases" style="height:13px;vertical-align:middle;">
 				</a>
 				<a href="https://github.com/229033891/EasyTier/releases" target="_blank" style="margin-left:4px;line-height:1;">
-					<img alt="" src="https://img.shields.io/github/v/release/229033891/EasyTier?logo=github&link=https%3A%2F%2Fgithub.com%2F229033891%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
+					<img alt="" src="https://img.shields.io/github/v/release/229033891/EasyTier?logo=github&link=https%3A%2F%2Fgithub.com%2F229033891%2FET%2Freleases" style="height:13px;vertical-align:middle;">
 				</a>
 			</label>
 			<div id="version-selector-container" style="display:flex;gap:8px;align-items:center;">
@@ -400,7 +400,7 @@ local translate = i18n.translate
 	
 	<div class="upload-card" id="upload_area">
 		<div class="upload-icon">📦</div>
-		<div class="upload-title"><%=translate("Upload EasyTier Binary")%></div>
+		<div class="upload-title"><%=translate("Upload ET Binary")%></div>
 		<div class="upload-desc"><%=translate("Drag *.tar.gz / *.zip / easytier binaries here or click to select file")%></div>
 		<input type="file" id="file_input" style="display:none" accept="*">
 		<button class="upload-btn" onclick="event.stopPropagation(); document.getElementById('file_input').click();">
@@ -428,7 +428,7 @@ local translate = i18n.translate
 	<div id="download_modal" class="modal">
 		<div class="modal-content">
 			<div class="modal-header">
-				<h3><%=translate("Online Download EasyTier")%></h3>
+				<h3><%=translate("Online Download ET")%></h3>
 			</div>
 			<div class="modal-body">
 				<div style="margin-bottom:16px;">
@@ -471,7 +471,7 @@ local translate = i18n.translate
 				<strong><%=translate("Note")%>:</strong>
 			</div>
 			<div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
-				<%=translate("Files will be uploaded to the paths specified above")%>. <%=translate("EasyTier console uses easytier-web-embed. The easytier-web binary will be rejected during upload validation.")%>
+				<%=translate("Files will be uploaded to the paths specified above")%>. <%=translate("ET console uses easytier-web-embed. The easytier-web binary will be rejected during upload validation.")%>
 			</div>
 		</div>
 		<div style="margin-top:12px;padding:12px;background:rgba(244,67,54,0.1);border-left:3px solid var(--error);border-radius:4px;">
