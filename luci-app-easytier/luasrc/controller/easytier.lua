@@ -117,7 +117,7 @@ function act_status()
 	if cached_newtag and cached_newtag ~= "" then
 		e.etnewtag = cached_newtag:gsub("[\r\n]+", "")
 	else
-		e.etnewtag = safe_exec("curl -L -k -s --connect-timeout 3 --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36' https://api.github.com/repos/EasyTier/EasyTier/releases/latest | grep tag_name | sed 's/[^0-9.]*//g'")
+		e.etnewtag = safe_exec("curl -L -k -s --connect-timeout 3 --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36' https://api.github.com/repos/229033891/EasyTier/releases/latest | grep tag_name | sed 's/[^0-9.]*//g'")
 		if e.etnewtag ~= "" then
 			local f = io.open("/tmp/easytiernew.tag", "w")
 			if f then f:write(e.etnewtag); f:close() end
@@ -451,8 +451,23 @@ function upload_binary()
 			os.execute("tar -xzf " .. tmp_file .. " -C " .. extract_dir .. " 2>/dev/null || tar -xf " .. tmp_file .. " -C " .. extract_dir)
 		end
 		
-		os.execute("find " .. extract_dir .. "/easytier-linux-* -maxdepth 1 -type f -exec mv {} " .. extract_dir .. "/ \\; 2>/dev/null")
+		-- Flatten release layouts: ET-linux-* (current) or easytier-linux-* (legacy)
+		os.execute("find " .. extract_dir .. " -maxdepth 1 -type d \\( -name 'ET-linux-*' -o -name 'easytier-linux-*' \\) -exec sh -c 'mv \"$1\"/* \"" .. extract_dir .. "/\" 2>/dev/null' _ {} \\;")
 		cleanup_files(tmp_file)
+		
+		-- Normalize current release binary names to plugin install names
+		local rename_map = {
+			["ET-core"] = "easytier-core",
+			["ET-cli"] = "easytier-cli",
+			["ET-web-embed"] = "easytier-web-embed",
+		}
+		for src_name, dest_name in pairs(rename_map) do
+			local src = extract_dir .. "/" .. src_name
+			local dest = extract_dir .. "/" .. dest_name
+			if nixio.fs.access(src) and not nixio.fs.access(dest) then
+				os.execute("mv " .. src .. " " .. dest)
+			end
+		end
 		
 		if nixio.fs.access(extract_dir .. "/easytier-web") then
 			nixio.fs.remove(extract_dir .. "/easytier-web")
@@ -515,7 +530,10 @@ function upload_binary()
 		nixio.fs.remove("/tmp/easytierweb.tag")
 		http.write_json({success = true, message = translate("Successfully installed") .. " " .. #valid_bins .. " " .. translate("binary file(s)")})
 	else
-		local valid_names = {["easytier-core"] = true, ["easytier-cli"] = true, ["easytier-web-embed"] = true, ["easytier-web"] = true}
+		local valid_names = {
+			["easytier-core"] = true, ["easytier-cli"] = true, ["easytier-web-embed"] = true, ["easytier-web"] = true,
+			["ET-core"] = true, ["ET-cli"] = true, ["ET-web-embed"] = true,
+		}
 		
 		if not valid_names[filename] then
 			cleanup_files(tmp_file)
@@ -540,11 +558,11 @@ function upload_binary()
 		local web_path = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web"
 		
 		local final_path
-		if filename == "easytier-web-embed" then
+		if filename == "easytier-web-embed" or filename == "ET-web-embed" then
 			final_path = web_path
-		elseif filename == "easytier-core" then
+		elseif filename == "easytier-core" or filename == "ET-core" then
 			final_path = core_path
-		elseif filename == "easytier-cli" then
+		elseif filename == "easytier-cli" or filename == "ET-cli" then
 			local core_dir = core_path:match("(.*/)")
 			final_path = (core_dir or "/usr/bin/") .. "easytier-cli"
 		end
@@ -1042,7 +1060,7 @@ function download_easytier()
 	local arch = arch_or_error
 	local proxies = get_github_proxies()
 	local download_dir = "/tmp/easytier_download"
-	local zip_file = download_dir .. "/easytier-linux-" .. arch .. "-" .. version .. ".zip"
+	local zip_file = download_dir .. "/ET-linux-" .. arch .. "-" .. version .. ".zip"
 	
 	-- 创建下载目录
 	os.execute("mkdir -p " .. download_dir)
@@ -1082,7 +1100,7 @@ function download_easytier()
 			return
 		end
 		
-		download_url = proxy .. "https://github.com/EasyTier/EasyTier/releases/download/" .. version .. "/easytier-linux-" .. arch .. "-" .. version .. ".zip"
+		download_url = proxy .. "https://github.com/229033891/EasyTier/releases/download/" .. version .. "/ET-linux-" .. arch .. "-" .. version .. ".zip"
 		
 		-- 删除之前的失败文件
 		os.execute("rm -f " .. zip_file)
@@ -1114,16 +1132,16 @@ function download_easytier()
 						return
 					end
 					
-					-- 查找解压后的目录（使用通配符）
-					local find_cmd = "find " .. extract_dir .. " -maxdepth 1 -type d -name 'easytier-linux-*' 2>/dev/null | head -1"
+					-- 查找解压后的目录（ET-linux-* 当前发布包名）
+					local find_cmd = "find " .. extract_dir .. " -maxdepth 1 -type d -name 'ET-linux-*' 2>/dev/null | head -1"
 					local handle = io.popen(find_cmd)
 					local subdir = handle:read("*a"):match("^%s*(.-)%s*$")
 					handle:close()
 					
 					if subdir and subdir ~= "" then
-						core_file = subdir .. "/easytier-core"
-						cli_file = subdir .. "/easytier-cli"
-						web_file = subdir .. "/easytier-web-embed"
+						core_file = subdir .. "/ET-core"
+						cli_file = subdir .. "/ET-cli"
+						web_file = subdir .. "/ET-web-embed"
 						
 						local files_ok = nixio.fs.access(core_file) and nixio.fs.access(cli_file)
 						if arch ~= "mips" and arch ~= "mipsel" then

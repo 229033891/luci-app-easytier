@@ -43,7 +43,7 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Network
 	TITLE:=A simple, decentralized mesh VPN with WireGuard support.
 	DEPENDS:=@(x86_64||arm||aarch64||mipsel||mips) +kmod-tun
-	URL:=https://github.com/EasyTier/EasyTier
+	URL:=https://github.com/229033891/EasyTier
 	MENU:=1
 endef
 
@@ -64,8 +64,11 @@ endef
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	if [ ! -f $(PKG_BUILD_DIR)/easytier-core ]; then \
-		wget https://github.com/EasyTier/EasyTier/releases/download/v$(PKG_VERSION)/$(PKG_NAME)-linux-$(APP_ARCH)-v$(PKG_VERSION).zip -O $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip; \
+		wget https://github.com/229033891/EasyTier/releases/download/v$(PKG_VERSION)/ET-linux-$(APP_ARCH)-v$(PKG_VERSION).zip -O $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip; \
 		unzip -o -j $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip -d $(PKG_BUILD_DIR); \
+		[ -f $(PKG_BUILD_DIR)/ET-core ] && mv -f $(PKG_BUILD_DIR)/ET-core $(PKG_BUILD_DIR)/easytier-core; \
+		[ -f $(PKG_BUILD_DIR)/ET-cli ] && mv -f $(PKG_BUILD_DIR)/ET-cli $(PKG_BUILD_DIR)/easytier-cli; \
+		[ -f $(PKG_BUILD_DIR)/ET-web-embed ] && mv -f $(PKG_BUILD_DIR)/ET-web-embed $(PKG_BUILD_DIR)/easytier-web-embed; \
 		rm -f $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip; \
 	fi
 endef

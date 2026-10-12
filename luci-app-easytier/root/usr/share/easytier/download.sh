@@ -5,6 +5,8 @@
 # 引入工具函数
 . /usr/share/easytier/utils.sh 2>/dev/null || true
 
+GITHUB_REPO="229033891/EasyTier"
+
 # 默认 GitHub 加速代理列表
 DEFAULT_PROXYS="
 https://ghproxy.net/
@@ -26,23 +28,24 @@ get_latest_version() {
 	local user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
 	local tag=""
 	local curltest=$(which curl)
+	local api_url="https://api.github.com/repos/${GITHUB_REPO}/releases/latest"
 	
 	if [ -z "$curltest" ] || [ ! -s "$(which curl)" ]; then
 		tag=$(wget --no-check-certificate -T 5 -t 3 --user-agent "$user_agent" --max-redirect=0 --output-document=- \
-			https://api.github.com/repos/EasyTier/EasyTier/releases/latest 2>&1 | grep 'tag_name' | cut -d\" -f4)
+			"$api_url" 2>&1 | grep 'tag_name' | cut -d\" -f4)
 		[ -z "$tag" ] && tag=$(wget --no-check-certificate -T 5 -t 3 --user-agent "$user_agent" --quiet --output-document=- \
-			https://api.github.com/repos/EasyTier/EasyTier/releases/latest 2>&1 | grep 'tag_name' | cut -d\" -f4)
+			"$api_url" 2>&1 | grep 'tag_name' | cut -d\" -f4)
 	else
 		tag=$(curl -k --connect-timeout 3 --user-agent "$user_agent" \
-			https://api.github.com/repos/EasyTier/EasyTier/releases/latest 2>&1 | grep 'tag_name' | cut -d\" -f4)
+			"$api_url" 2>&1 | grep 'tag_name' | cut -d\" -f4)
 		[ -z "$tag" ] && tag=$(curl -Lk --connect-timeout 3 --user-agent "$user_agent" -s \
-			https://api.github.com/repos/EasyTier/EasyTier/releases/latest 2>&1 | grep 'tag_name' | cut -d\" -f4)
+			"$api_url" 2>&1 | grep 'tag_name' | cut -d\" -f4)
 	fi
 	
 	# 如果获取失败，从 UCI 配置或使用默认版本
 	if [ -z "$tag" ]; then
 		tag=$(uci -q get easytier.@easytier[0].fallback_version)
-		[ -z "$tag" ] && tag="v2.6.2"
+		[ -z "$tag" ] && tag="v2.7.5"
 	fi
 	
 	echo "$tag"
@@ -55,7 +58,7 @@ download_binary() {
 	local cpucore="$2"
 	local path="$3"
 	local proxys=$(get_proxy_list)
-	local download_url="https://github.com/EasyTier/EasyTier/releases/download/${tag}/easytier-linux-${cpucore}-${tag}.zip"
+	local download_url="https://github.com/${GITHUB_REPO}/releases/download/${tag}/ET-linux-${cpucore}-${tag}.zip"
 	
 	mkdir -p "$path"
 	
@@ -66,6 +69,10 @@ download_binary() {
 		   wget --no-check-certificate --timeout=10 --tries=3 -O /tmp/easytier.zip "${proxy}${download_url}"; then
 			
 			unzip -j -q -o /tmp/easytier.zip -d /tmp
+			# Normalize release names (ET-*) to plugin install names
+			[ -f /tmp/ET-core ] && mv -f /tmp/ET-core /tmp/easytier-core
+			[ -f /tmp/ET-cli ] && mv -f /tmp/ET-cli /tmp/easytier-cli
+			[ -f /tmp/ET-web-embed ] && mv -f /tmp/ET-web-embed /tmp/easytier-web-embed
 			chmod +x /tmp/easytier-core /tmp/easytier-cli /tmp/easytier-web /tmp/easytier-web-embed 2>/dev/null || true
 			rm -rf /tmp/easytier.zip
 			
@@ -124,6 +131,11 @@ handle_uploaded_binary() {
 	local path="$1"
 	local easytierbin="$2"
 	local size=$(get_available_space "$path")
+
+	# Normalize current release names if present
+	[ -f /tmp/ET-core ] && mv -f /tmp/ET-core /tmp/easytier-core
+	[ -f /tmp/ET-cli ] && mv -f /tmp/ET-cli /tmp/easytier-cli
+	[ -f /tmp/ET-web-embed ] && mv -f /tmp/ET-web-embed /tmp/easytier-web-embed
 	
 	if [ -f /tmp/easytier-core ] || [ -f /tmp/easytier-cli ]; then
 		if [ "${path:0:4}" != "/tmp" ]; then

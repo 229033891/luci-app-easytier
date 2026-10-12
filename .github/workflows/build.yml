@@ -195,10 +195,10 @@ jobs:
           Then download the matching EasyTier Linux release from:
           然后从以下地址下载匹配架构的 EasyTier Linux 官方 Release 包：
 
-          https://github.com/EasyTier/EasyTier/releases
+          https://github.com/229033891/EasyTier/releases
 
-          In LuCI, go to VPN -> EasyTier -> Upload Program, set the program directory, save it, and upload \`easytier-core\`, \`easytier-cli\`, and optionally \`easytier-web-embed\`.
-          在 LuCI 中进入 VPN -> EasyTier -> 上传程序，设置程序目录并保存，然后上传 \`easytier-core\`、\`easytier-cli\`，以及可选的 \`easytier-web-embed\`。
+          In LuCI, go to VPN -> EasyTier -> Upload Program, set the program directory, save it, and upload \`ET-core\`/\`easytier-core\`, \`ET-cli\`/\`easytier-cli\`, and optionally \`ET-web-embed\`/\`easytier-web-embed\`.
+          在 LuCI 中进入 VPN -> EasyTier -> 上传程序，设置程序目录并保存，然后上传 \`ET-core\`/\`easytier-core\`、\`ET-cli\`/\`easytier-cli\`，以及可选的 \`ET-web-embed\`/\`easytier-web-embed\`。
 
           ## After installation / 安装后
 

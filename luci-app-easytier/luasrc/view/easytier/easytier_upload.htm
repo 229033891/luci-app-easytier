@@ -371,11 +371,11 @@ local translate = i18n.translate
 		<div style="margin-bottom:16px;">
 			<label style="display:flex;align-items:center;font-size:13px;font-weight:500;color:var(--text-primary);margin-bottom:4px;">
 				<span><%=translate("Fallback Version")%></span>
-				<a href="https://github.com/EasyTier/EasyTier/releases" target="_blank" style="margin-left:8px;line-height:1;">
-					<img alt="" src="https://img.shields.io/github/v/tag/EasyTier/EasyTier?include_prereleases&logo=github&label=tag&link=https%3A%2F%2Fgithub.com%2FEasyTier%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
+				<a href="https://github.com/229033891/EasyTier/releases" target="_blank" style="margin-left:8px;line-height:1;">
+					<img alt="" src="https://img.shields.io/github/v/tag/229033891/EasyTier?include_prereleases&logo=github&label=tag&link=https%3A%2F%2Fgithub.com%2F229033891%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
 				</a>
-				<a href="https://github.com/EasyTier/EasyTier/releases" target="_blank" style="margin-left:4px;line-height:1;">
-					<img alt="" src="https://img.shields.io/github/v/release/EasyTier/EasyTier?logo=github&link=https%3A%2F%2Fgithub.com%2FEasyTier%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
+				<a href="https://github.com/229033891/EasyTier/releases" target="_blank" style="margin-left:4px;line-height:1;">
+					<img alt="" src="https://img.shields.io/github/v/release/229033891/EasyTier?logo=github&link=https%3A%2F%2Fgithub.com%2F229033891%2FEasyTier%2Freleases" style="height:13px;vertical-align:middle;">
 				</a>
 			</label>
 			<div id="version-selector-container" style="display:flex;gap:8px;align-items:center;">
@@ -460,9 +460,9 @@ local translate = i18n.translate
 	<div class="upload-info">
 		<div class="upload-info-title"><%=translate("Supported Files")%></div>
 		<ul class="upload-info-list">
-			<li><strong>easytier-core</strong> - <%=translate("Core service binary")%></li>
-			<li><strong>easytier-cli</strong> - <%=translate("Command line tool")%></li>
-			<li><strong>easytier-web-embed</strong> - <%=translate("Embedded web console")%> <span style="color:var(--success);">(<%=translate("Recommended")%>)</span></li>
+			<li><strong>ET-core</strong> / easytier-core - <%=translate("Core service binary")%></li>
+			<li><strong>ET-cli</strong> / easytier-cli - <%=translate("Command line tool")%></li>
+			<li><strong>ET-web-embed</strong> / easytier-web-embed - <%=translate("Embedded web console")%> <span style="color:var(--success);">(<%=translate("Recommended")%>)</span></li>
 			<li><strong>easytier-web</strong> - <%=translate("Web console binary")%> <span style="color:var(--error);">(<%=translate("Will be ignored, use embed version instead")%>)</span></li>
 			<li><strong>*.zip / *.tar.gz</strong> - <%=translate("Compressed archive containing binaries")%></li>
 		</ul>
@@ -483,7 +483,7 @@ local translate = i18n.translate
 			</div>
 		</div>
 		<div style="margin-top:12px;font-size:12px;color:var(--text-secondary);">
-			<%=translate("Download from")%>: <a href="https://github.com/EasyTier/EasyTier/releases" target="_blank">https://github.com/EasyTier/EasyTier</a>
+			<%=translate("Download from")%>: <a href="https://github.com/229033891/EasyTier/releases" target="_blank">https://github.com/229033891/EasyTier</a>
 		</div>
 	</div>
 </div>
@@ -519,7 +519,7 @@ var versionManager = {
 	loadVersions: function() {
 		var self = this;
 		var xhr = new XMLHttpRequest();
-		xhr.open('GET', 'https://api.github.com/repos/EasyTier/EasyTier/releases', true);
+		xhr.open('GET', 'https://api.github.com/repos/229033891/EasyTier/releases', true);
 		xhr.timeout = 10000;
 		
 		xhr.onload = function() {
@@ -961,7 +961,7 @@ window.onload = function() {
 	alertBox = document.getElementById('alert_box');
 	restartModal = document.getElementById('restart_modal');
 	
-	var validNames = ['easytier-core', 'easytier-cli', 'easytier-web', 'easytier-web-embed'];
+	var validNames = ['easytier-core', 'easytier-cli', 'easytier-web', 'easytier-web-embed', 'ET-core', 'ET-cli', 'ET-web-embed'];
 
 	// 拖放事件
 	uploadArea.addEventListener('dragover', function(e) {
@@ -997,7 +997,7 @@ window.onload = function() {
 };
 
 function handleFile(file) {
-	var validNames = ['easytier-core', 'easytier-cli', 'easytier-web', 'easytier-web-embed'];
+	var validNames = ['easytier-core', 'easytier-cli', 'easytier-web', 'easytier-web-embed', 'ET-core', 'ET-cli', 'ET-web-embed'];
 	var filename = file.name;
 	
 	// 检查是否是压缩文件

@@ -6,7 +6,7 @@ English | [简体中文](README.md)
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-18.06--26.x-orange.svg)](https://openwrt.org)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/EasyTier/luci-app-easytier)
 
-OpenWrt LuCI web interface for managing [EasyTier](https://github.com/EasyTier/EasyTier) - a simple, secure, and decentralized VPN networking solution.
+OpenWrt LuCI web interface for managing [EasyTier](https://github.com/229033891/EasyTier) - a simple, secure, and decentralized VPN networking solution.
 
 ## ✨ Features
 
@@ -248,7 +248,7 @@ This project is licensed under the [Apache License 2.0](LICENSE).
 
 ## 🔗 Related Links
 
-- [EasyTier Official Repository](https://github.com/EasyTier/EasyTier)
+- [EasyTier Repository](https://github.com/229033891/EasyTier)
 - [EasyTier Official Documentation](https://easytier.cn)
 - [OpenWrt Official Website](https://openwrt.org)
 

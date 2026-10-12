@@ -6,7 +6,7 @@
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-18.06--26.x-orange.svg)](https://openwrt.org)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/EasyTier/luci-app-easytier)
 
-OpenWrt LuCI界面，用于管理 [EasyTier](https://github.com/EasyTier/EasyTier) - 一个简单、安全、去中心化的内网穿透VPN组网方案。
+OpenWrt LuCI界面，用于管理 [EasyTier](https://github.com/229033891/EasyTier) - 一个简单、安全、去中心化的内网穿透VPN组网方案。
 
 ## UI 预览
 
@@ -256,7 +256,7 @@ sed -i 's/util.pcdata/xml.pcdata/g' /usr/lib/lua/luci/model/cbi/easytier.lua
 
 ## 🔗 相关链接
 
-- [EasyTier 官方仓库](https://github.com/EasyTier/EasyTier)
+- [EasyTier 仓库](https://github.com/229033891/EasyTier)
 - [EasyTier 官方文档](https://easytier.cn)
 - [OpenWrt 官网](https://openwrt.org)
 
