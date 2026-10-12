@@ -4,8 +4,15 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:648
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:666
 msgid ""
-"- Program /tmp/easytier-cli uploaded successfully, restart the plugin to "
-"take effect"
+"A simple, secure, decentralized VPN solution for intranet penetration, "
+"implemented in Rust using the Tokio framework. Project URL: <a href="
+"\"https://github.com/229033891/EasyTier\" target=\"_blank\">github.com/"
+"229033891/EasyTier</a>&nbsp;&nbsp;<a href=\"http://easytier.cn\" target="
+"\"_blank\">Official Documentation</a>&nbsp;&nbsp;<a href=\"http://qm.qq.com/"
+"cgi-bin/qm/qr?"
+"_wv=1027&k=jhP2Z4UsEZ8wvfGPLrs0VwLKn_uz0Q_p&authKey=OGKSQLfg61YPCpVQuvx"
+"%2BxE7hUKBVBEVi9PljrDKbHlle6xqOXx8sOwPPTncMambK&noverify=0&group_code=949700262\" "
+"target=\"_blank\">QQ Group</a>&nbsp;&nbsp;"
 msgstr ""
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:640
