@@ -1,10 +1,10 @@
-![luci-app-easytier](https://socialify.git.ci/EasyTier/luci-app-easytier/image?custom_description=EasyTier+Installation+Packages+%28IPK+and+APK%29+for+OpenWrt&description=1&font=JetBrains+Mono&forks=1&issues=1&logo=https%3A%2F%2Favatars.githubusercontent.com%2Fu%2F169161851%3Fs%3D200%26v%3D4&name=1&pulls=1&stargazers=1&theme=Auto)
+![luci-app-easytier](https://socialify.git.ci/229033891/luci-app-easytier/image?custom_description=EasyTier+Installation+Packages+%28IPK+and+APK%29+for+OpenWrt&description=1&font=JetBrains+Mono&forks=1&issues=1&logo=https%3A%2F%2Favatars.githubusercontent.com%2Fu%2F169161851%3Fs%3D200%26v%3D4&name=1&pulls=1&stargazers=1&theme=Auto)
 
 English | [简体中文](README.md)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-18.06--26.x-orange.svg)](https://openwrt.org)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/EasyTier/luci-app-easytier)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/229033891/luci-app-easytier)
 
 OpenWrt LuCI web interface for managing [EasyTier](https://github.com/229033891/EasyTier) - a simple, secure, and decentralized VPN networking solution.
 
@@ -34,7 +34,7 @@ OpenWrt LuCI web interface for managing [EasyTier](https://github.com/229033891/
 
 ### Method 1: Using Pre-compiled Packages
 
-1. Download the package for your architecture from [Releases](https://github.com/EasyTier/luci-app-easytier/releases)
+1. Download the package for your architecture from [Releases](https://github.com/229033891/luci-app-easytier/releases)
 2. Upload to OpenWrt's `/tmp` directory
 3. Install:
 
@@ -68,7 +68,7 @@ tar -xJf openwrt-sdk-*.tar.xz
 cd openwrt-sdk-*/
 
 # 2. Clone the repository
-git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
+git clone https://github.com/229033891/luci-app-easytier.git package/luci-app-easytier
 
 # 3. Update feeds and configure
 ./scripts/feeds update -a

@@ -1,10 +1,10 @@
-![luci-app-easytier](https://socialify.git.ci/EasyTier/luci-app-easytier/image?description=1&font=JetBrains+Mono&forks=1&issues=1&logo=https%3A%2F%2Favatars.githubusercontent.com%2Fu%2F169161851%3Fs%3D200%26v%3D4&name=1&pulls=1&stargazers=1&theme=Auto)
+![luci-app-easytier](https://socialify.git.ci/229033891/luci-app-easytier/image?description=1&font=JetBrains+Mono&forks=1&issues=1&logo=https%3A%2F%2Favatars.githubusercontent.com%2Fu%2F169161851%3Fs%3D200%26v%3D4&name=1&pulls=1&stargazers=1&theme=Auto)
 
 [English](README_EN.md) | 简体中文
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![OpenWrt](https://img.shields.io/badge/OpenWrt-18.06--26.x-orange.svg)](https://openwrt.org)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/EasyTier/luci-app-easytier)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/229033891/luci-app-easytier)
 
 OpenWrt LuCI界面，用于管理 [EasyTier](https://github.com/229033891/EasyTier) - 一个简单、安全、去中心化的内网穿透VPN组网方案。
 
@@ -40,7 +40,7 @@ OpenWrt LuCI界面，用于管理 [EasyTier](https://github.com/229033891/EasyTi
 
 ### 方式一：使用预编译包
 
-1. 从 [Releases](https://github.com/EasyTier/luci-app-easytier/releases) 下载对应架构的安装包
+1. 从 [Releases](https://github.com/229033891/luci-app-easytier/releases) 下载对应架构的安装包
 2. 上传到OpenWrt的 `/tmp` 目录
 3. 安装：
 
@@ -74,7 +74,7 @@ tar -xJf openwrt-sdk-*.tar.xz
 cd openwrt-sdk-*/
 
 # 2. 克隆项目
-git clone https://github.com/EasyTier/luci-app-easytier.git package/luci-app-easytier
+git clone https://github.com/229033891/luci-app-easytier.git package/luci-app-easytier
 
 # 3. 更新feeds并配置
 ./scripts/feeds update -a
