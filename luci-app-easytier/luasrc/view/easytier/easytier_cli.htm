@@ -997,7 +997,7 @@ function parseTable(content, tabName) {
 
 		// 检查是否使用配置文件启动
 		if (content.indexOf('--config-file') !== -1 || content.match(/-c\s+\//)) {
-			XHR.get('<%=url("admin/vpn/easytier/api_conninfo")%>', null, function(x, data) {
+			XHR.get('<%=url("admin/services/easytier/api_conninfo")%>', null, function(x, data) {
 				if (data && data.config_file) {
 					var configDiv = document.createElement('div');
 					configDiv.className = 'et-pre';
@@ -1214,7 +1214,7 @@ function refreshConnInfo() {
 	btnText.textContent = '<%:Refreshing...%>';
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "api_conninfo")%>', true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "api_conninfo")%>', true);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState === 4) {
 			isRefreshing = false;
@@ -1507,7 +1507,7 @@ function loadContributors() {
 }
 
 // 自动刷新
-XHR.poll(5, '<%=url("admin", "vpn", "easytier", "api_conninfo")%>', null, function(x, data) {
+XHR.poll(5, '<%=url("admin", "services", "easytier", "api_conninfo")%>', null, function(x, data) {
 	if (!isRefreshing && data) {
 		updateConnInfo(data);
 	}

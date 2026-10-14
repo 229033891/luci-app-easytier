@@ -44,13 +44,13 @@ if [ -f /tmp/easytier_backup ] ; then
   echo "发现luci备份配置文件/tmp/easytier_backup，开始恢复到/etc/config/easytier"
   rm -rf /etc/config/easytier
   mv -f /tmp/easytier_backup /etc/config/easytier
-  echo "请前往 VPN - EasyTier 界面进行重启插件"
+  echo "请前往 服务 - ET 界面进行重启插件"
 fi
 if [ -d /tmp/et_config_backup ] ; then
   echo "发现easytier备份配置目录/tmp/et_config_backup，开始恢复到/etc/easytier"
   rm -rf /etc/easytier
   mv -f /tmp/et_config_backup /etc/easytier
-  echo "请前往 VPN - EasyTier 界面进行重启插件"
+  echo "请前往 服务 - ET 界面进行重启插件"
 fi
 endef
 

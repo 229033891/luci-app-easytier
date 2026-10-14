@@ -157,9 +157,9 @@ msgstr "上传成功"
 ```lua
 -- controller/easytier.lua
 function index()
-    entry({"admin", "vpn", "easytier"}, firstchild(), _("EasyTier"), 46).dependent = true
-    entry({"admin", "vpn", "easytier", "status"}, cbi("easytier_status"), _("Status"), 1).leaf = true
-    entry({"admin", "vpn", "easytier", "api_status"}, call("act_status")).leaf = true
+    entry({"admin", "services", "easytier"}, firstchild(), _("EasyTier"), 46).dependent = true
+    entry({"admin", "services", "easytier", "status"}, cbi("easytier_status"), _("Status"), 1).leaf = true
+    entry({"admin", "services", "easytier", "api_status"}, call("act_status")).leaf = true
 end
 ```
 
@@ -183,7 +183,7 @@ end
 ```javascript
 function updateStatus() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/cgi-bin/luci/admin/vpn/easytier/api_status', true);
+    xhr.open('GET', '/cgi-bin/luci/admin/services/easytier/api_status', true);
     xhr.onload = function() {
         if (xhr.status === 200) {
             var data = JSON.parse(xhr.responseText);
@@ -254,7 +254,7 @@ end
 ```javascript
 function loadLog() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/cgi-bin/luci/admin/vpn/easytier/get_log', true);
+    xhr.open('GET', '/cgi-bin/luci/admin/services/easytier/get_log', true);
     xhr.onload = function() {
         if (xhr.status === 200) {
             var lines = xhr.responseText.split('\n');

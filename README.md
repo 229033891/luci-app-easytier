@@ -53,7 +53,7 @@ apk add --allow-untrusted /tmp/luci-app-easytier_*.apk
 ```
 
 4. 刷新浏览器或重新登录LuCI界面
-5. 在 **VPN → EasyTier** 中上传EasyTier二进制程序
+5. 在 **服务 → ET** 中上传EasyTier二进制程序
 
 ### 方式二：GitHub Actions自动编译
 
@@ -103,7 +103,7 @@ opkg install kmod-tun
 
 ### 首次配置
 
-1. 安装插件后，进入 **VPN → EasyTier**
+1. 安装插件后，进入 **服务 → ET**
 2. 在 **上传程序** 页面上传EasyTier二进制文件或直接安装包含核心的ipk/apk包（easytier.ipk easytier.apk）
    - 支持单个文件：`easytier-core`, `easytier-cli`, `easytier-web-embed`
    - 支持压缩包：`.zip`, `.tar.gz`, `.tar`
@@ -211,7 +211,7 @@ luci-app-easytier/
 
 ```lua
 -- API路径格式
-entry({"admin", "vpn", "easytier", "api_name"}, call("function_name")).leaf = true
+entry({"admin", "services", "easytier", "api_name"}, call("function_name")).leaf = true
 
 -- 返回JSON格式
 function api_name()

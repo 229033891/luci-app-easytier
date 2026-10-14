@@ -127,8 +127,8 @@ jobs:
           2. Install \`luci-app-easytier\`. / 再安装 \`luci-app-easytier\`。
           3. Install \`luci-i18n-easytier-zh-cn\` if you need Simplified Chinese. / 如需中文界面，再安装 \`luci-i18n-easytier-zh-cn\`。
 
-          If you need the EasyTier binaries in a custom directory, do not install \`easytier\` or \`easytier-noweb\`. Install only \`luci-app-easytier\` and the language package, then open LuCI -> VPN -> EasyTier -> Upload Program, set the program directory, save it, and upload the official EasyTier release files manually.
-          如果需要把 EasyTier 程序安装到自定义目录，不要安装 \`easytier\` 或 \`easytier-noweb\`。只安装 \`luci-app-easytier\` 和语言包，然后进入 LuCI -> VPN -> EasyTier -> 上传程序，设置程序目录并保存，再手动上传官方 EasyTier Release 中的程序文件。
+          If you need the EasyTier binaries in a custom directory, do not install \`easytier\` or \`easytier-noweb\`. Install only \`luci-app-easytier\` and the language package, then open LuCI -> Services -> ET -> Upload Program, set the program directory, save it, and upload the official EasyTier release files manually.
+          如果需要把 EasyTier 程序安装到自定义目录，不要安装 \`easytier\` 或 \`easytier-noweb\`。只安装 \`luci-app-easytier\` 和语言包，然后进入 LuCI -> 服务 -> ET -> 上传程序，设置程序目录并保存，再手动上传官方 EasyTier Release 中的程序文件。
 
           You can also use the online download function on the Upload Program page. This requires network access to GitHub. If GitHub access is slow or unavailable, configure acceleration mirror URLs before downloading.
           也可以在“上传程序”页面使用在线下载功能。该功能需要设备能正常访问 GitHub；如果访问慢或无法访问，请先配置加速镜像地址。
@@ -197,13 +197,13 @@ jobs:
 
           https://github.com/229033891/EasyTier/releases
 
-          In LuCI, go to VPN -> EasyTier -> Upload Program, set the program directory, save it, and upload \`ET-core\`/\`easytier-core\`, \`ET-cli\`/\`easytier-cli\`, and optionally \`ET-web-embed\`/\`easytier-web-embed\`.
-          在 LuCI 中进入 VPN -> EasyTier -> 上传程序，设置程序目录并保存，然后上传 \`ET-core\`/\`easytier-core\`、\`ET-cli\`/\`easytier-cli\`，以及可选的 \`ET-web-embed\`/\`easytier-web-embed\`。
+          In LuCI, go to Services -> ET -> Upload Program, set the program directory, save it, and upload \`ET-core\`/\`easytier-core\`, \`ET-cli\`/\`easytier-cli\`, and optionally \`ET-web-embed\`/\`easytier-web-embed\`.
+          在 LuCI 中进入 服务 -> ET -> 上传程序，设置程序目录并保存，然后上传 \`ET-core\`/\`easytier-core\`、\`ET-cli\`/\`easytier-cli\`，以及可选的 \`ET-web-embed\`/\`easytier-web-embed\`。
 
           ## After installation / 安装后
 
           - Refresh LuCI or log in again. / 刷新 LuCI 页面或重新登录。
-          - Open VPN -> EasyTier. / 打开 VPN -> EasyTier。
+          - Open Services -> ET. / 打开 服务 -> ET。
           - Configure network name, network secret, peers, and other options, then enable the service. / 配置网络名称、网络密钥、节点等参数，然后启用服务。
           - Check logs on the EasyTier log page or by running \`logread | grep -i easytier\`. / 可在 EasyTier 日志页面查看日志，或执行 \`logread | grep -i easytier\`。
 

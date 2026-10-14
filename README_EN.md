@@ -47,7 +47,7 @@ apk add --allow-untrusted /tmp/luci-app-easytier_*.apk
 ```
 
 4. Refresh your browser or re-login to LuCI interface
-5. Upload EasyTier binary in **VPN → EasyTier**
+5. Upload EasyTier binary in **Services → ET**
 
 ### Method 2: GitHub Actions Auto-build
 
@@ -97,7 +97,7 @@ opkg install kmod-tun
 
 ### Initial Configuration
 
-1. After installing the plugin, navigate to **VPN → EasyTier**
+1. After installing the plugin, navigate to **Services → ET**
 2. Upload EasyTier binary files on the **Upload Program** page, or directly install the ipk/apk package containing the core (easytier.ipk / easytier.apk)
    - Supports single files: `easytier-core`, `easytier-cli`, `easytier-web-embed`
    - Supports compressed packages: `.zip`, `.tar.gz`, `.tar`
@@ -205,7 +205,7 @@ luci-app-easytier/
 
 ```lua
 -- API path format
-entry({"admin", "vpn", "easytier", "api_name"}, call("function_name")).leaf = true
+entry({"admin", "services", "easytier", "api_name"}, call("function_name")).leaf = true
 
 -- Return JSON format
 function api_name()
