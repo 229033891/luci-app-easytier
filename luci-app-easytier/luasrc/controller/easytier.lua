@@ -20,6 +20,65 @@ local function safe_read_file(path)
     return content
 end
 
+-- 写小文件（缓存/时间戳）；失败静默
+local function safe_write_file(path, content)
+    local file = io.open(path, "w")
+    if not file then return false end
+    file:write(content)
+    file:close()
+    return true
+end
+
+-- 带 TTL 的字符串缓存：命中返回缓存值，缺失/过期返回 nil
+local function read_ttl_cache(value_path, time_path, ttl)
+    local value = safe_read_file(value_path)
+    if value == nil or value == "" then return nil end
+    local ts = tonumber((safe_read_file(time_path) or ""):match("%d+") or "")
+    if not ts then return nil end
+    if os.time() - ts > ttl then return nil end
+    return value
+end
+
+local function write_ttl_cache(value_path, time_path, value)
+    safe_write_file(value_path, value)
+    safe_write_file(time_path, tostring(os.time()))
+end
+
+-- 进程平均 CPU 占用（%）。单次快照给不出瞬时值，用 (utime+stime)/进程存活时长 近似，
+-- 取代昂贵的 `top -b -n1`（审计建议 4）。分母必须是**进程存活 tick**而非整机 uptime，
+-- 否则长开机设备上 CPU 会被系统性低估到近 0。
+local function read_proc_cpu(pid)
+    pid = tostring(pid or ""):match("%d+")
+    if not pid then return "" end
+    local stat = safe_read_file("/proc/" .. pid .. "/stat")
+    if not stat then return "" end
+    -- 贪婪取最后一个 ")"，comm 允许含空格与括号；其后紧跟 state 字段
+    local rest = stat:match("^%d+ %(.*%)%s+(.*)$")
+    if not rest then return "" end
+    local fields = {}
+    for token in rest:gmatch("%S+") do fields[#fields + 1] = token end
+    -- rest 从 state(字段3) 起算：utime=f[12]、stime=f[13]、starttime=f[20]
+    local utime = tonumber(fields[12]) or 0
+    local stime = tonumber(fields[13]) or 0
+    local starttime = tonumber(fields[20]) or 0
+    local uptime = tonumber((safe_read_file("/proc/uptime") or ""):match("^([%d%.]+)") or "")
+    if not uptime or uptime <= 0 then return "" end
+    local elapsed_ticks = uptime * 100 - starttime
+    if elapsed_ticks <= 0 then return "" end
+    return string.format("%.1f", (utime + stime) / elapsed_ticks * 100)
+end
+
+-- 进程常驻内存（MB，保持与旧 `top`+awk 输出一致的 "%.2f MB" 形式）
+local function read_proc_rss_mb(pid)
+    pid = tostring(pid or ""):match("%d+")
+    if not pid then return "" end
+    local status = safe_read_file("/proc/" .. pid .. "/status")
+    if not status then return "" end
+    local kb = tonumber(status:match("VmRSS:%s*(%d+)"))
+    if not kb then return "" end
+    return string.format("%.2f MB", kb / 1024)
+end
+
 -- 计算运行时长
 local function calc_uptime(start_time_file)
     local content = safe_read_file(start_time_file)
@@ -95,32 +154,31 @@ function act_status()
 	e.etsta = calc_uptime("/tmp/easytier_time")
 	e.etwebsta = calc_uptime("/tmp/easytierweb_time")
 	
-	-- 获取 CPU 和内存使用率（使用原始命令）
-	local command2 = io.popen('test ! -z "`pidof easytier-core`" && (top -b -n1 | grep -E "$(pidof easytier-core)" 2>/dev/null | grep -v grep | awk \'{for (i=1;i<=NF;i++) {if ($i ~ /easytier-core/) break; else cpu=i}} END {print $cpu}\')')
-	e.etcpu = command2:read("*all")
-	command2:close()
+	-- CPU / 内存：直接读 /proc，取代每次 2 次 `top -b -n1`（审计建议 4）
+	local core_pid = safe_exec("pidof easytier-core"):match("(%d+)%s*$")
+	local web_pid = safe_exec("pidof easytier-web"):match("(%d+)%s*$")
+	e.etcpu = read_proc_cpu(core_pid)
+	e.etram = read_proc_rss_mb(core_pid)
+	e.etwebcpu = read_proc_cpu(web_pid)
+	e.etwebram = read_proc_rss_mb(web_pid)
 	
-	local command3 = io.popen("test ! -z `pidof easytier-core` && (cat /proc/$(pidof easytier-core | awk '{print $NF}')/status | grep -w VmRSS | awk '{printf \"%.2f MB\", $2/1024}')")
-	e.etram = command3:read("*all")
-	command3:close()
-	
-	local command4 = io.popen('test ! -z "`pidof easytier-web`" && (top -b -n1 | grep -E "$(pidof easytier-web)" 2>/dev/null | grep -v grep | awk \'{for (i=1;i<=NF;i++) {if ($i ~ /easytier-web/) break; else cpu=i}} END {print $cpu}\')')
-	e.etwebcpu = command4:read("*all")
-	command4:close()
-	
-	local command5 = io.popen("test ! -z `pidof easytier-web` && (cat /proc/$(pidof easytier-web | awk '{print $NF}')/status | grep -w VmRSS | awk '{printf \"%.2f MB\", $2/1024}')")
-	e.etwebram = command5:read("*all")
-	command5:close()
-	
-	-- 获取版本信息
-	local cached_newtag = safe_read_file("/tmp/easytiernew.tag")
-	if cached_newtag and cached_newtag ~= "" then
-		e.etnewtag = cached_newtag:gsub("[\r\n]+", "")
+	-- 版本信息：失败也写负缓存（占位 + 时间戳，TTL 30min）。
+	-- 否则 OpenWrt 上 curl 的 3s 超时与轮询周期等长，请求永远排不空（审计建议 1）。
+	local NEWTAG_CACHE = "/tmp/easytiernew.tag"
+	local NEWTAG_CACHE_TS = "/tmp/easytiernew.tag.time"
+	local NEWTAG_TTL = 1800
+	local cached_newtag = read_ttl_cache(NEWTAG_CACHE, NEWTAG_CACHE_TS, NEWTAG_TTL)
+	if cached_newtag then
+		e.etnewtag = (cached_newtag == "-") and "" or cached_newtag:gsub("[\r\n]+", "")
 	else
-		e.etnewtag = safe_exec("curl -L -k -s --connect-timeout 3 --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36' https://api.github.com/repos/229033891/EasyTier/releases/latest | grep tag_name | sed 's/[^0-9.]*//g'")
-		if e.etnewtag ~= "" then
-			local f = io.open("/tmp/easytiernew.tag", "w")
-			if f then f:write(e.etnewtag); f:close() end
+		local fetched = safe_exec("curl -L -k -s --connect-timeout 3 --user-agent 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36' https://api.github.com/repos/229033891/EasyTier/releases/latest | grep tag_name | sed 's/[^0-9.]*//g'")
+		fetched = (fetched or ""):gsub("[\r\n]+", "")
+		if fetched ~= "" then
+			e.etnewtag = fetched
+			write_ttl_cache(NEWTAG_CACHE, NEWTAG_CACHE_TS, fetched)
+		else
+			e.etnewtag = ""
+			write_ttl_cache(NEWTAG_CACHE, NEWTAG_CACHE_TS, "-")
 		end
 	end
 	
@@ -353,15 +411,61 @@ function get_tun_info()
 	luci.http.write(response)
 end
 
-function get_log()
-    local log = ""
-    local files = {"/tmp/easytier.log"}
-    for i, file in ipairs(files) do
-        if luci.sys.call("[ -f '" .. file .. "' ]") == 0 then
-            log = log .. luci.sys.exec("sed 's/\\x1b\\[[0-9;]*m//g' " .. file)
+-- 增量读取日志：只返回 [offset, size) 中到最后一个换行为止的完整行，并清 ANSI 颜色。
+-- 返回 {size, next_offset, reset, content}。首次（无 offset）仅取尾部 tail_limit 字节，
+-- 避免一次性拉满 5MB 并全量重建 DOM（审计建议 2/6）。
+local function read_log_incremental(file, tail_limit)
+    local handle = io.open(file, "rb")
+    if not handle then
+        return {size = 0, next_offset = 0, reset = true, content = ""}
+    end
+    local size = handle:seek("end") or 0
+
+    local offset = tonumber(luci.http.formvalue("offset"))
+    local req_tail = tonumber(luci.http.formvalue("tail"))
+    if req_tail and req_tail > 0 then
+        tail_limit = req_tail
+    end
+    local reset = false
+    if not offset or offset < 0 or offset > size then
+        offset = (tail_limit and size > tail_limit) and (size - tail_limit) or 0
+        reset = true
+    end
+
+    handle:seek("set", offset)
+    local chunk = handle:read("*a") or ""
+    handle:close()
+
+    -- 首次 tail 裁剪时首行可能被截断，丢弃之（offset > 0 说明不是文件头）
+    if reset and offset > 0 then
+        local first_nl = chunk:find("\n")
+        if first_nl then
+            chunk = chunk:sub(first_nl + 1)
+            offset = offset + first_nl
         end
     end
-    luci.http.write(log)
+
+    -- 对齐到最后一个换行：残行留到下次，避免前端把半行渲染成两行
+    local nl = chunk:match(".*()\n")
+    local content = ""
+    local next_offset = offset
+    if nl then
+        content = chunk:sub(1, nl)
+        next_offset = offset + nl
+    end
+
+    content = content:gsub("\27%[[0-9;]*m", "")
+
+    return {size = size, next_offset = next_offset, reset = reset, content = content}
+end
+
+local function write_log_json(payload)
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(payload)
+end
+
+function get_log()
+    write_log_json(read_log_incremental("/tmp/easytier.log", 131072))
 end
 
 function get_log_size()
@@ -451,8 +555,21 @@ function upload_binary()
 			os.execute("tar -xzf " .. tmp_file .. " -C " .. extract_dir .. " 2>/dev/null || tar -xf " .. tmp_file .. " -C " .. extract_dir)
 		end
 		
-		-- Flatten release layouts: ET-linux-* (current) or easytier-linux-* (legacy)
-		os.execute("find " .. extract_dir .. " -maxdepth 1 -type d \\( -name 'ET-linux-*' -o -name 'easytier-linux-*' \\) -exec sh -c 'mv \"$1\"/* \"" .. extract_dir .. "/\" 2>/dev/null' _ {} \\;")
+		-- Flatten release layouts: locate known binaries anywhere under the archive
+		-- (ET-linux-* current, easytier-linux-* legacy, or flat zip)
+		local known = {
+			"ET-core", "ET-cli", "ET-web-embed",
+			"easytier-core", "easytier-cli", "easytier-web-embed",
+		}
+		for _, name in ipairs(known) do
+			local find_cmd = "find " .. extract_dir .. " -type f -name '" .. name .. "' 2>/dev/null | head -1"
+			local handle = io.popen(find_cmd)
+			local found = handle and handle:read("*a"):match("^%s*(.-)%s*$") or ""
+			if handle then handle:close() end
+			if found ~= "" and found ~= extract_dir .. "/" .. name then
+				os.execute("mv '" .. found .. "' '" .. extract_dir .. "/" .. name .. "' 2>/dev/null")
+			end
+		end
 		cleanup_files(tmp_file)
 		
 		-- Normalize current release binary names to plugin install names
@@ -465,7 +582,7 @@ function upload_binary()
 			local src = extract_dir .. "/" .. src_name
 			local dest = extract_dir .. "/" .. dest_name
 			if nixio.fs.access(src) and not nixio.fs.access(dest) then
-				os.execute("mv " .. src .. " " .. dest)
+				os.execute("mv '" .. src .. "' '" .. dest .. "'")
 			end
 		end
 		
@@ -589,14 +706,7 @@ function upload_binary()
 end
 
 function get_wlog()
-    local log = ""
-    local files = {"/tmp/easytierweb.log"}
-    for i, file in ipairs(files) do
-        if luci.sys.call("[ -f '" .. file .. "' ]") == 0 then
-            log = log .. luci.sys.exec("sed 's/\\x1b\\[[0-9;]*m//g' " .. file)
-        end
-    end
-    luci.http.write(log)
+    write_log_json(read_log_incremental("/tmp/easytierweb.log", 131072))
 end
 
 function clear_wlog()
@@ -617,20 +727,48 @@ function act_conninfo()
 	local e = {}
 	local uci = require "luci.model.uci".cursor()
 	local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
+	-- 兼容自定义二进制名：先替换结尾的 easytier-core，否则取同目录下的 easytier-cli
 	local clibin = easytierbin:gsub("easytier%-core$", "easytier-cli")
+	if clibin == easytierbin then
+		clibin = (easytierbin:match("^(.*/)") or "/usr/bin/") .. "easytier-cli"
+	end
 	
 	local process_status = luci.sys.exec("pgrep easytier-core")
 	
 	if process_status ~= "" then
-		-- 获取各类CLI信息
+		-- CLI 子进程（11 个/次）加缓存：TTL 5s 与轮询对齐，文件名沿用
+		-- init.d stop_service 既有的 /tmp/easytier-cli_* 清理列表（审计建议 3）。
+		local CLI_CACHE_TTL = 5
+		local CLI_CACHE_NAMES = {
+			["node"] = "node",
+			["peer"] = "peer",
+			["connector"] = "connector",
+			["stun"] = "stun",
+			["route"] = "route",
+			["peer-center"] = "peer-center",
+			["vpn-portal"] = "vpn-portal",
+			["proxy"] = "proxy",
+			["acl stats"] = "acl",
+			["mapped-listener"] = "mapped_listener",
+			["stats"] = "stats",
+		}
 		local function get_cli_output(cmd)
-			local handle = io.popen(clibin .. " " .. cmd .. " 2>&1")
-			if handle then
-				local result = handle:read("*all")
-				handle:close()
-				return result or ""
+			local name = CLI_CACHE_NAMES[cmd] or cmd:gsub("[^%w]+", "_")
+			local value_path = "/tmp/easytier-cli_" .. name
+			local time_path = value_path .. ".time"
+			local cached = read_ttl_cache(value_path, time_path, CLI_CACHE_TTL)
+			if cached then
+				-- "-" 是空输出的占位（read_ttl_cache 视空串为未命中）
+				return (cached == "-") and "" or cached
 			end
-			return ""
+			local handle = io.popen(clibin .. " " .. cmd .. " 2>&1")
+			local result = ""
+			if handle then
+				result = handle:read("*all") or ""
+				handle:close()
+			end
+			write_ttl_cache(value_path, time_path, result == "" and "-" or result)
+			return result
 		end
 		
 		e.node = get_cli_output("node")
@@ -646,7 +784,9 @@ function act_conninfo()
 		e.stats = get_cli_output("stats")
 		
 		-- 获取启动参数
-		local cmdhandle = io.popen("cat /proc/$(pidof easytier-core)/cmdline 2>/dev/null | tr '\\0' ' '")
+		-- 用单一 PID（多 PID 时 $(pidof) 会拼出 "/proc/111 222/cmdline"）
+		local core_pid = safe_exec("pidof easytier-core"):match("(%d+)%s*$")
+		local cmdhandle = io.popen("cat /proc/" .. (core_pid or "self") .. "/cmdline 2>/dev/null | tr '\\0' ' '")
 		if cmdhandle then
 			e.cmdline = cmdhandle:read("*all") or ""
 			cmdhandle:close()

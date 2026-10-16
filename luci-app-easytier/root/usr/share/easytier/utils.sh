@@ -46,7 +46,7 @@ log_message() {
 # 日志大小管理
 manage_log_size() {
 	local logfile="$1"
-	local max_size_kb="${2:-5120}"
+	local max_size_kb="${2:-1024}"
 	local keep_lines="${3:-500}"
 	
 	while true; do

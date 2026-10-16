@@ -1037,10 +1037,10 @@ function updateTunInterface(coreRunning, noTun, devName) {
 					var txSpeed = 0;
 					
 					if (lastTunRx > 0 && response.rx_bytes > lastTunRx) {
-						rxSpeed = (response.rx_bytes - lastTunRx) / 3;
+						rxSpeed = (response.rx_bytes - lastTunRx) / 10;
 					}
 					if (lastTunTx > 0 && response.tx_bytes > lastTunTx) {
-						txSpeed = (response.tx_bytes - lastTunTx) / 3;
+						txSpeed = (response.tx_bytes - lastTunTx) / 10;
 					}
 					
 					lastTunRx = response.rx_bytes;
@@ -1074,11 +1074,17 @@ function updateTunInterface(coreRunning, noTun, devName) {
 }
 
 var firstLoad = true;
-XHR.poll(3, '<%=url("admin", "vpn", "easytier", "api_status")%>', null, function(x, data) {
+// TUN 详情（get_tun_info：多次 ip/ifconfig 派生）降频为每 2 次轮询一次，
+// 速率换算随之用 10s（审计建议 5）。
+var tunPollTick = 0;
+XHR.poll(5, '<%=url("admin", "vpn", "easytier", "api_status")%>', null, function(x, data) {
 	if (!data) return;
 	updateStatus(data);
 	
-	updateTunInterface(data.crunning, data.no_tun, data.dev_name);
+	if (tunPollTick === 0) {
+		updateTunInterface(data.crunning, data.no_tun, data.dev_name);
+	}
+	tunPollTick = (tunPollTick + 1) % 2;
 	
 	// 使用配置值初始化开关状态
 	var coreSwitch = document.getElementById('coreSwitch');
@@ -1136,7 +1142,16 @@ function confirmRefreshVersion() {
 	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "clear_version_cache")%>?type=' + currentVersionType, true);
 	xhr.onload = function() {
 		if (xhr.status === 200) {
-			XHR.poll(0);
+			// 缓存已清，立即拉一次状态刷新版本徽标。
+			// 不能用 XHR.poll(0)：它不会立即刷新，且在新版 LuCI 上会注册一个
+			// 无回调、指向无效 URL 的轮询（每次触发抛异常）。
+			var statusXhr = new XMLHttpRequest();
+			statusXhr.open('GET', '<%=url("admin", "vpn", "easytier", "api_status")%>', true);
+			statusXhr.onload = function() {
+				if (statusXhr.status !== 200) return;
+				try { updateStatus(JSON.parse(statusXhr.responseText)); } catch (e) {}
+			};
+			statusXhr.send();
 		}
 	};
 	xhr.send();
