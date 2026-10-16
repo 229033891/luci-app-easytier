@@ -693,7 +693,7 @@ local uci = require 'luci.model.uci'.cursor()
 
 <script type="text/javascript">//<![CDATA[
 var translations = {
-	// Peer表格头部 (来自ET CLI源码)
+	// Peer表格头部 (来自EasyTier CLI源码)
 	"ipv4": "<%:IPv4 Address%>",
 	"hostname": "<%:Hostname%>", 
 	"cost": "<%:Route Cost%>",
@@ -1084,15 +1084,17 @@ function parseTable(content, tabName) {
 			return match.replace('Listener', tr('Listener'));
 		});
 		
-		// 处理PublicServer_包装为标签样式
-		translatedContent = translatedContent.replace(/PublicServer_/g, '<span style="background:#e3f2fd;color:#1976d2;padding:2px 4px;border-radius:4px;font-size:11px;font-weight:500;">' + tr('PublicServer_') + '</span>');
-		
-		// 处理特殊格式
+		// 处理特殊格式（纯文本替换，不插入 HTML）
 		translatedContent = translatedContent.replace(/###############\s*([^#]+)\s*###############/g, function(match, p1) {
 			return '############### ' + tr(p1.trim()) + ' ###############';
 		});
 		
-		return '<div class="et-pre">' + (translatedContent.indexOf('<svg') !== -1 || translatedContent.indexOf('<span') !== -1 ? translatedContent : escapeHtml(translatedContent)) + '</div>';
+		// 先整体转义，再把可信标记 PublicServer_ 包成标签。
+		// 不再凭“内容里是否出现 <span/<svg”决定是否转义——那会被对端可控文本绕过（XSS）。
+		translatedContent = escapeHtml(translatedContent);
+		translatedContent = translatedContent.replace(/PublicServer_/g, '<span style="background:#e3f2fd;color:#1976d2;padding:2px 4px;border-radius:4px;font-size:11px;font-weight:500;">' + escapeHtml(tr('PublicServer_')) + '</span>');
+		
+		return '<div class="et-pre">' + translatedContent + '</div>';
 	}
 	
 	var isNodeTable = tabName === 'node';
@@ -1148,11 +1150,8 @@ function parseTable(content, tabName) {
 				// 处理带编号的Listener
 				if (cellContent.match(/^Listener\s+\d+$/)) {
 					cellContent = cellContent.replace('Listener', tr('Listener'));
-				} else if (cellContent.indexOf('PublicServer_') !== -1) {
-					// 将PublicServer_包装为标签样式
-					cellContent = cellContent.replace(/PublicServer_/g, '<span style="background:#e3f2fd;color:#1976d2;padding:2px 4px;border-radius:4px;font-size:11px;font-weight:500;">' + tr('PublicServer_') + '</span>');
-				} else {
-					// 处理标签内容翻译 (key=value格式)
+				} else if (cellContent.indexOf('PublicServer_') === -1) {
+					// 标签内容翻译 (key=value)；含 PublicServer_ 的单元格留到转义后再包标签
 					cellContent = cellContent.replace(/(\w+)=([^,\s]+)/g, function(match, key, value) {
 						var translatedKey = translations[key] ? tr(key) : key;
 						var translatedValue = translations[value] ? tr(value) : value;
@@ -1163,12 +1162,10 @@ function parseTable(content, tabName) {
 			}
 			
 			var display = (cellContent === '' || cellContent.trim() === '') ? '-' : cellContent;
-			// 如果包含HTML标签，不进行HTML转义
-			if (display.indexOf('<svg') !== -1 || display.indexOf('<span') !== -1) {
-				html += '<' + tag + '>' + display + '</' + tag + '>';
-			} else {
-				html += '<' + tag + '>' + escapeHtml(display) + '</' + tag + '>';
-			}
+			// 先转义，再把可信标记 PublicServer_ 包成标签（不再凭“含 <span”跳过转义，避免 XSS）
+			var safeDisplay = escapeHtml(display);
+			safeDisplay = safeDisplay.replace(/PublicServer_/g, '<span style="background:#e3f2fd;color:#1976d2;padding:2px 4px;border-radius:4px;font-size:11px;font-weight:500;">' + escapeHtml(tr('PublicServer_')) + '</span>');
+			html += '<' + tag + '>' + safeDisplay + '</' + tag + '>';
 		}
 		html += '</tr>';
 		rowIndex++;

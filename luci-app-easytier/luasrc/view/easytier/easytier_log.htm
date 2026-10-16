@@ -508,6 +508,8 @@ var currentLog = 'core';
 var pollTimer = null;
 var allLogLines = [];
 var autoRefreshEnabled = true;
+// 增量读取游标：null = 下次重置（首屏 / 切换日志 / 清空后）
+var logOffset = null;
 
 function filterLogLevel() {
 	var filter = document.getElementById('log_level_filter').value;
@@ -542,7 +544,7 @@ function switchLog(type) {
 		}
 	}
 	document.getElementById('log_size_info').innerHTML = '';
-	refreshLog();
+	refreshLog(true);
 }
 
 function formatLogLine(line) {
@@ -589,69 +591,78 @@ function escapeHtml(text) {
 	return div.innerHTML;
 }
 
-function refreshLog() {
-	var url = currentLog === 'core' 
+function renderLogLines(rawText) {
+	var lines = rawText.split('\n');
+	var html = '';
+	for (var i = 0; i < lines.length; i++) {
+		var line = lines[i];
+		if (!line.trim()) continue;
+		html += formatLogLine(line);
+	}
+	return html;
+}
+
+// 增量刷新：首次取尾部 128KB，之后按 next_offset 只追加新行（审计建议 2），
+// 避免每 2s 全量拉取最大 5MB 日志并整块重建 DOM。
+function refreshLog(reset) {
+	if (reset) logOffset = null;
+
+	var reqLog = currentLog;
+	var base = reqLog === 'core' 
 		? '<%=url("admin/services/easytier/get_log")%>'
 		: '<%=url("admin/services/easytier/get_wlog")%>';
+	var url = base + (logOffset === null ? '?tail=131072' : '?offset=' + logOffset);
 	
 	var xhr = new XMLHttpRequest();
 	xhr.open('GET', url, true);
 	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4 && xhr.status === 200) {
-			var content = document.getElementById('log_content');
-			var rawLog = xhr.responseText || '';
-			
-			if (rawLog.trim() === '') {
-				content.innerHTML = '<div class="log-empty"><%=translate("No logs available")%></div>';
-				return;
-			}
-			
-			var lines = rawLog.split('\n');
-			var html = '';
-			
-			for (var i = 0; i < lines.length; i++) {
-				var line = lines[i];
-				if (!line.trim()) continue;
-				html += formatLogLine(line);
-			}
-			
-			content.innerHTML = html;
+		if (xhr.readyState !== 4 || xhr.status !== 200) return;
+		// 快速切换日志时丢弃过期响应，避免把旧日志追加进新 tab
+		if (reqLog !== currentLog) return;
+
+		var content = document.getElementById('log_content');
+		var data;
+		try { data = JSON.parse(xhr.responseText); } catch (e) { return; }
+
+		if (data.reset) {
+			content.innerHTML = '';
+		}
+		var empty = content.querySelector('.log-empty');
+		if (empty) empty.remove();
+
+		if (data.content) {
+			content.insertAdjacentHTML('beforeend', renderLogLines(data.content));
 			filterLogLevel();
-			
-			if (autoRefreshEnabled) {
-				content.scrollTop = content.scrollHeight;
-				updateLogSize();
-			}
+		}
+
+		if (!content.querySelector('.log-line')) {
+			content.innerHTML = '<div class="log-empty"><%=translate("No logs available")%></div>';
+		}
+
+		logOffset = data.next_offset;
+		renderLogSize(data.size);
+
+		if (autoRefreshEnabled) {
+			content.scrollTop = content.scrollHeight;
 		}
 	};
 	xhr.send();
 }
 
-function updateLogSize() {
-	var url = currentLog === 'core' 
-		? '<%=url("admin/services/easytier/get_log_size")%>'
-		: '<%=url("admin/services/easytier/get_wlog_size")%>';
+// 直接用 get_log 响应里的 size 渲染，不再单独发一次 get_log_size 请求
+function renderLogSize(size) {
+	var sizeMB = (size / 1024 / 1024).toFixed(2);
+	var logPath = currentLog === 'core' ? '/tmp/easytier.log' : '/tmp/easytierweb.log';
+	var sizeClass = '';
 	
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, true);
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4 && xhr.status === 200) {
-			var data = JSON.parse(xhr.responseText);
-			var sizeMB = (data.size / 1024 / 1024).toFixed(2);
-			var logPath = currentLog === 'core' ? '/tmp/easytier.log' : '/tmp/easytierweb.log';
-			var sizeClass = '';
-			
-			if (sizeMB < 1) sizeClass = 'log-size-1';
-			else if (sizeMB < 2) sizeClass = 'log-size-2';
-			else if (sizeMB < 3) sizeClass = 'log-size-3';
-			else if (sizeMB < 4) sizeClass = 'log-size-4';
-			else sizeClass = 'log-size-5';
-			
-			document.getElementById('log_size_info').innerHTML = 
-				logPath + ': <span class="' + sizeClass + '">' + sizeMB + ' MB</span>';
-		}
-	};
-	xhr.send();
+	if (sizeMB < 1) sizeClass = 'log-size-1';
+	else if (sizeMB < 2) sizeClass = 'log-size-2';
+	else if (sizeMB < 3) sizeClass = 'log-size-3';
+	else if (sizeMB < 4) sizeClass = 'log-size-4';
+	else sizeClass = 'log-size-5';
+	
+	document.getElementById('log_size_info').innerHTML = 
+		logPath + ': <span class="' + sizeClass + '">' + sizeMB + ' MB</span>';
 }
 
 function clearCurrentLog() {
@@ -663,6 +674,7 @@ function clearCurrentLog() {
 	xhr.open('GET', url, true);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState === 4 && xhr.status === 200) {
+			logOffset = null;
 			document.getElementById('log_content').innerHTML = '<div class="log-empty"><%=translate("Logs cleared")%></div>';
 		}
 	};
@@ -699,9 +711,9 @@ function startPolling() {
 	if (pollTimer) clearInterval(pollTimer);
 	pollTimer = setInterval(function() {
 		if (autoRefreshEnabled) {
-			refreshLog();
+			refreshLog(false);
 		}
-	}, 2000);
+	}, 5000);
 }
 
 function toggleAutoRefresh(refreshNow) {
@@ -711,14 +723,14 @@ function toggleAutoRefresh(refreshNow) {
 
 	if (autoRefreshEnabled) {
 		if (wrapper) wrapper.title = '<%=translate("Stop Auto Refresh")%>';
-		if (refreshNow) refreshLog();
+		if (refreshNow) refreshLog(false);
 	} else {
 		if (wrapper) wrapper.title = '<%=translate("Start Auto Refresh")%>';
 	}
 }
 
 toggleAutoRefresh(false);
-refreshLog();
+refreshLog(true);
 startPolling();
 
 window.addEventListener('beforeunload', function() {
