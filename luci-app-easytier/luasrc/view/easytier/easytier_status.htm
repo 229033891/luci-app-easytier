@@ -583,9 +583,10 @@ function getMemColor(memStr) {
 
 function parseUptime(uptime) {
 	if (!uptime) return 0;
-	var days = uptime.match(/(\d+)d/);
-	var hours = uptime.match(/(\d+)h/);
-	var mins = uptime.match(/(\d+)m/);
+	// 后端 calc_uptime 返回中文格式，如 "3天 04小时05分06秒" / "04小时05分06秒"
+	var days = uptime.match(/(\d+)\s*天/);
+	var hours = uptime.match(/(\d+)\s*小时/);
+	var mins = uptime.match(/(\d+)\s*分/);
 	var total = 0;
 	if (days) total += parseInt(days[1]) * 24;
 	if (hours) total += parseInt(hours[1]);
@@ -613,7 +614,7 @@ function renderService(name, data, isRunning) {
 	if (isRunning) {
 		var cpuPercent = parseCPU(data.cpu || '0%');
 		var memLevel = parseMem(data.mem || '0 MB');
-		var uptimePercent = parseUptime(data.uptime || '0m');
+		var uptimePercent = parseUptime(data.uptime || '0分');
 		var versionInfo = compareVersion(data.version, data.latest);
 		var colors = getComputedStyle(document.documentElement);
 		
