@@ -11,6 +11,12 @@ local function safe_exec(cmd)
     return result:gsub("[\r\n]+$", "")
 end
 
+-- shell 单引号转义（LuCI 自带的 shellquote 各版本可用性不一，自带一份）
+local function shell_quote(s)
+	if s == nil then return "''" end
+	return "'" .. tostring(s):gsub("'", "'\\''") .. "'"
+end
+
 -- 安全读取文件内容
 local function safe_read_file(path)
     local file = io.open(path, "r")
@@ -301,8 +307,8 @@ function get_disk_space()
 	local full_path = data.full_path
 	local input_type = data.type
 	
-	local df_output = luci.sys.exec("df -h '" .. path .. "' 2>/dev/null | tail -n 1")
-	local df_kb = luci.sys.exec("df -k '" .. path .. "' 2>/dev/null | tail -n 1")
+	local df_output = luci.sys.exec("df -h " .. shell_quote(path) .. " 2>/dev/null | tail -n 1")
+	local df_kb = luci.sys.exec("df -k " .. shell_quote(path) .. " 2>/dev/null | tail -n 1")
 	
 	if df_output and df_output ~= "" and df_kb and df_kb ~= "" then
 		local available = df_output:match("%S+%s+%S+%s+%S+%s+(%S+)")
@@ -318,7 +324,7 @@ function get_disk_space()
 			
 			if input_type == "easytierbin" and full_path then
 				if nixio.fs.access(full_path) then
-					local size = luci.sys.exec("ls -lh '" .. full_path .. "' 2>/dev/null | awk '{print $5}'")
+					local size = luci.sys.exec("ls -lh " .. shell_quote(full_path) .. " 2>/dev/null | awk '{print $5}'")
 					if size and size ~= "" then
 						result.core_size = size:gsub("[\r\n]+$", "")
 					end
@@ -327,14 +333,14 @@ function get_disk_space()
 				local dir = full_path:match("(.*/)")
 				local cli_path = (dir or "/usr/bin/") .. "easytier-cli"
 				if nixio.fs.access(cli_path) then
-					local size = luci.sys.exec("ls -lh '" .. cli_path .. "' 2>/dev/null | awk '{print $5}'")
+					local size = luci.sys.exec("ls -lh " .. shell_quote(cli_path) .. " 2>/dev/null | awk '{print $5}'")
 					if size and size ~= "" then
 						result.cli_size = size:gsub("[\r\n]+$", "")
 					end
 				end
 			elseif input_type == "webbin" and full_path then
 				if nixio.fs.access(full_path) then
-					local size = luci.sys.exec("ls -lh '" .. full_path .. "' 2>/dev/null | awk '{print $5}'")
+					local size = luci.sys.exec("ls -lh " .. shell_quote(full_path) .. " 2>/dev/null | awk '{print $5}'")
 					if size and size ~= "" then
 						result.web_size = size:gsub("[\r\n]+$", "")
 					end
@@ -353,6 +359,11 @@ function get_tun_info()
 	luci.http.prepare_content("application/json")
 	
 	local ifname = luci.http.formvalue("ifname") or "tun0"
+	-- 接口名白名单（Linux ifname：字母数字与 . _ : - ，≤15 字符），防命令注入
+	if not ifname:match("^[%w%._:%-]+$") or #ifname > 15 then
+		luci.http.write('{"success":false,"exists":false}')
+		return
+	end
 	
 	local exists = luci.sys.exec("ip link show " .. ifname .. " >/dev/null 2>&1 && echo 1 || echo 0")
 	if not exists:match("1") then
@@ -516,7 +527,8 @@ function upload_binary()
 	http.setfilehandler(
 		function(meta, chunk, eof)
 			if meta and meta.file then
-				filename = meta.file
+				-- 只取 basename：既防路径穿越写文件，又去掉 shell 元字符的入口
+				filename = meta.file:match("[^/\\]+$") or "upload.bin"
 				tmp_file = "/tmp/upload_" .. filename
 			end
 			if not fp and tmp_file ~= "" then
@@ -550,9 +562,9 @@ function upload_binary()
 				http.write_json({success = false, message = translate("System lacks unzip package, cannot extract zip archive")})
 				return
 			end
-			os.execute("unzip -o -q " .. tmp_file .. " -d " .. extract_dir)
+			os.execute("unzip -o -q " .. shell_quote(tmp_file) .. " -d " .. shell_quote(extract_dir))
 		else
-			os.execute("tar -xzf " .. tmp_file .. " -C " .. extract_dir .. " 2>/dev/null || tar -xf " .. tmp_file .. " -C " .. extract_dir)
+			os.execute("tar -xzf " .. shell_quote(tmp_file) .. " -C " .. shell_quote(extract_dir) .. " 2>/dev/null || tar -xf " .. shell_quote(tmp_file) .. " -C " .. shell_quote(extract_dir))
 		end
 		
 		-- Flatten release layouts: locate known binaries anywhere under the archive
@@ -625,17 +637,17 @@ function upload_binary()
 				final_path = (core_dir or "/usr/bin/") .. "easytier-cli"
 			end
 			
-			os.execute("rm -f " .. final_path)
+			os.execute("rm -f " .. shell_quote(final_path))
 			
-			if os.execute("mv " .. bin.path .. " " .. final_path) ~= 0 then
+			if os.execute("mv " .. shell_quote(bin.path) .. " " .. shell_quote(final_path)) ~= 0 then
 				os.execute("rm -rf " .. extract_dir)
 				http.write_json({success = false, message = translate("Failed to move file. Insufficient space or permission denied")})
 				return
 			end
 			
-			os.execute("chmod 755 " .. final_path)
+			os.execute("chmod 755 " .. shell_quote(final_path))
 			if not test_binary(final_path) then
-				os.execute("rm -f " .. final_path)
+				os.execute("rm -f " .. shell_quote(final_path))
 				os.execute("rm -rf " .. extract_dir)
 				http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 				return
@@ -684,17 +696,17 @@ function upload_binary()
 			final_path = (core_dir or "/usr/bin/") .. "easytier-cli"
 		end
 		
-		os.execute("rm -f " .. final_path)
+		os.execute("rm -f " .. shell_quote(final_path))
 		
-		if os.execute("mv " .. tmp_file .. " " .. final_path) ~= 0 then
+		if os.execute("mv " .. shell_quote(tmp_file) .. " " .. shell_quote(final_path)) ~= 0 then
 			cleanup_files(tmp_file)
 			http.write_json({success = false, message = translate("Failed to move file. Insufficient space or permission denied")})
 			return
 		end
 		
-		os.execute("chmod 755 " .. final_path)
+		os.execute("chmod 755 " .. shell_quote(final_path))
 		if not test_binary(final_path) then
-			os.execute("rm -f " .. final_path)
+			os.execute("rm -f " .. shell_quote(final_path))
 			http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 			return
 		end
@@ -1138,9 +1150,9 @@ local function download_file(url, output_path, progress_callback)
 		if safe_exec("which " .. tool) ~= "" then
 			local cmd = ""
 			if tool == "curl" then
-				cmd = string.format("curl -L -k --connect-timeout 30 --max-time 300 -o '%s' '%s'", output_path, url)
+				cmd = "curl -L -k --connect-timeout 30 --max-time 300 -o " .. shell_quote(output_path) .. " " .. shell_quote(url)
 			elseif tool == "wget" then
-				cmd = string.format("wget --no-check-certificate --timeout=30 --tries=3 -O '%s' '%s'", output_path, url)
+				cmd = "wget --no-check-certificate --timeout=30 --tries=3 -O " .. shell_quote(output_path) .. " " .. shell_quote(url)
 			end
 			
 			if progress_callback then
@@ -1189,6 +1201,11 @@ function download_easytier()
 	end
 	
 	local version = req_data.version
+	-- 版本号形如 v2.7.5 / 2.7.5；白名单校验，防止其拼入路径/命令（命令注入）
+	if not version:match("^v?[%w%._%-]+$") then
+		luci.http.write_json({success = false, message = "Invalid version parameter"})
+		return
+	end
 	
 	-- 1. 检查依赖和架构
 	local ok, arch_or_error = check_dependencies()
