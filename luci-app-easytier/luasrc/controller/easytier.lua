@@ -496,7 +496,7 @@ function clear_log()
 end
 
 local function test_binary(path)
-	local handle = io.popen(path .. " -h 2>&1")
+	local handle = io.popen(shell_quote(path) .. " -h 2>&1")
 	local output = handle:read("*a")
 	handle:close()
 	
@@ -554,7 +554,7 @@ function upload_binary()
 	
 	if is_archive then
 		local extract_dir = "/tmp/easytier_extract"
-		os.execute("rm -rf " .. extract_dir .. " && mkdir -p " .. extract_dir)
+		os.execute("rm -rf " .. shell_quote(extract_dir) .. " && mkdir -p " .. shell_quote(extract_dir))
 		
 		if filename:match("%.zip$") then
 			if os.execute("which unzip >/dev/null 2>&1") ~= 0 then
@@ -574,12 +574,12 @@ function upload_binary()
 			"easytier-core", "easytier-cli", "easytier-web-embed",
 		}
 		for _, name in ipairs(known) do
-			local find_cmd = "find " .. extract_dir .. " -type f -name '" .. name .. "' 2>/dev/null | head -1"
+			local find_cmd = "find " .. shell_quote(extract_dir) .. " -type f -name '" .. name .. "' 2>/dev/null | head -1"
 			local handle = io.popen(find_cmd)
 			local found = handle and handle:read("*a"):match("^%s*(.-)%s*$") or ""
 			if handle then handle:close() end
 			if found ~= "" and found ~= extract_dir .. "/" .. name then
-				os.execute("mv '" .. found .. "' '" .. extract_dir .. "/" .. name .. "' 2>/dev/null")
+				os.execute("mv " .. shell_quote(found) .. " " .. shell_quote(extract_dir .. "/" .. name) .. " 2>/dev/null")
 			end
 		end
 		cleanup_files(tmp_file)
@@ -594,7 +594,7 @@ function upload_binary()
 			local src = extract_dir .. "/" .. src_name
 			local dest = extract_dir .. "/" .. dest_name
 			if nixio.fs.access(src) and not nixio.fs.access(dest) then
-				os.execute("mv '" .. src .. "' '" .. dest .. "'")
+				os.execute("mv " .. shell_quote(src) .. " " .. shell_quote(dest))
 			end
 		end
 		
@@ -618,7 +618,7 @@ function upload_binary()
 		end
 		
 		if #valid_bins == 0 then
-			os.execute("rm -rf " .. extract_dir)
+			os.execute("rm -rf " .. shell_quote(extract_dir))
 			http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 			return
 		end
@@ -640,7 +640,7 @@ function upload_binary()
 			os.execute("rm -f " .. shell_quote(final_path))
 			
 			if os.execute("mv " .. shell_quote(bin.path) .. " " .. shell_quote(final_path)) ~= 0 then
-				os.execute("rm -rf " .. extract_dir)
+				os.execute("rm -rf " .. shell_quote(extract_dir))
 				http.write_json({success = false, message = translate("Failed to move file. Insufficient space or permission denied")})
 				return
 			end
@@ -648,13 +648,13 @@ function upload_binary()
 			os.execute("chmod 755 " .. shell_quote(final_path))
 			if not test_binary(final_path) then
 				os.execute("rm -f " .. shell_quote(final_path))
-				os.execute("rm -rf " .. extract_dir)
+				os.execute("rm -rf " .. shell_quote(extract_dir))
 				http.write_json({success = false, message = translate("Not a valid ET program or architecture mismatch")})
 				return
 			end
 		end
 		
-		os.execute("rm -rf " .. extract_dir)
+		os.execute("rm -rf " .. shell_quote(extract_dir))
 		nixio.fs.remove("/tmp/easytier.tag")
 		nixio.fs.remove("/tmp/easytierweb.tag")
 		http.write_json({success = true, message = translate("Successfully installed") .. " " .. #valid_bins .. " " .. translate("binary file(s)")})
@@ -773,7 +773,7 @@ function act_conninfo()
 				-- "-" 是空输出的占位（read_ttl_cache 视空串为未命中）
 				return (cached == "-") and "" or cached
 			end
-			local handle = io.popen(clibin .. " " .. cmd .. " 2>&1")
+			local handle = io.popen(shell_quote(clibin) .. " " .. cmd .. " 2>&1")
 			local result = ""
 			if handle then
 				result = handle:read("*all") or ""
@@ -1220,11 +1220,11 @@ function download_easytier()
 	local zip_file = download_dir .. "/ET-linux-" .. arch .. "-" .. version .. ".zip"
 	
 	-- 创建下载目录
-	os.execute("mkdir -p " .. download_dir)
+	os.execute("mkdir -p " .. shell_quote(download_dir))
 	
 	-- 创建取消标志文件
 	local cancel_file = "/tmp/easytier_download_cancel"
-	os.execute("rm -f " .. cancel_file)
+	os.execute("rm -f " .. shell_quote(cancel_file))
 	
 	-- 创建进度文件标记任务开始
 	local f = io.open(progress_file, "w")
@@ -1251,8 +1251,8 @@ function download_easytier()
 	for _, proxy in ipairs(proxies) do
 		-- 检查是否被取消
 		if check_cancelled() then
-			os.execute("rm -rf " .. download_dir)
-			os.execute("rm -f " .. progress_file)
+			os.execute("rm -rf " .. shell_quote(download_dir))
+			os.execute("rm -f " .. shell_quote(progress_file))
 			luci.http.write_json({success = false, message = i18n.translate("Download cancelled")})
 			return
 		end
@@ -1260,8 +1260,8 @@ function download_easytier()
 		download_url = proxy .. "https://github.com/229033891/EasyTier/releases/download/" .. version .. "/ET-linux-" .. arch .. "-" .. version .. ".zip"
 		
 		-- 删除之前的失败文件
-		os.execute("rm -f " .. zip_file)
-		os.execute("rm -rf " .. download_dir .. "/extracted")
+		os.execute("rm -f " .. shell_quote(zip_file))
+		os.execute("rm -rf " .. shell_quote(download_dir) .. "/extracted")
 		
 		-- 下载
 		if download_file(download_url, zip_file) then
@@ -1269,28 +1269,28 @@ function download_easytier()
 			if stat and stat.size > 10240 then
 				-- 检查是否被取消
 				if check_cancelled() then
-					os.execute("rm -rf " .. download_dir)
-					os.execute("rm -f " .. progress_file)
+					os.execute("rm -rf " .. shell_quote(download_dir))
+					os.execute("rm -f " .. shell_quote(progress_file))
 					luci.http.write_json({success = false, message = i18n.translate("Download cancelled")})
 					return
 				end
 				
 				-- 解压
 				local extract_dir = download_dir .. "/extracted"
-				os.execute("mkdir -p " .. extract_dir)
-				local unzip_result = os.execute("cd " .. extract_dir .. " && unzip -o " .. zip_file .. " >/dev/null 2>&1")
+				os.execute("mkdir -p " .. shell_quote(extract_dir))
+				local unzip_result = os.execute("cd " .. shell_quote(extract_dir) .. " && unzip -o " .. shell_quote(zip_file) .. " >/dev/null 2>&1")
 				
 				if unzip_result == 0 then
 					-- 检查是否被取消
 					if check_cancelled() then
-						os.execute("rm -rf " .. download_dir)
-						os.execute("rm -f " .. progress_file)
+						os.execute("rm -rf " .. shell_quote(download_dir))
+						os.execute("rm -f " .. shell_quote(progress_file))
 						luci.http.write_json({success = false, message = i18n.translate("Download cancelled")})
 						return
 					end
 					
 					-- 查找解压后的目录（ET-linux-* 当前发布包名）
-					local find_cmd = "find " .. extract_dir .. " -maxdepth 1 -type d -name 'ET-linux-*' 2>/dev/null | head -1"
+					local find_cmd = "find " .. shell_quote(extract_dir) .. " -maxdepth 1 -type d -name 'ET-linux-*' 2>/dev/null | head -1"
 					local handle = io.popen(find_cmd)
 					local subdir = handle:read("*a"):match("^%s*(.-)%s*$")
 					handle:close()
@@ -1308,8 +1308,8 @@ function download_easytier()
 						if files_ok then
 							-- 检查是否被取消
 							if check_cancelled() then
-								os.execute("rm -rf " .. download_dir)
-								os.execute("rm -f " .. progress_file)
+								os.execute("rm -rf " .. shell_quote(download_dir))
+								os.execute("rm -f " .. shell_quote(progress_file))
 								luci.http.write_json({success = false, message = i18n.translate("Download cancelled")})
 								return
 							end
@@ -1322,7 +1322,7 @@ function download_easytier()
 							
 							local test_ok = true
 							for _, file in ipairs(test_files) do
-								os.execute("chmod +x " .. file)
+								os.execute("chmod +x " .. shell_quote(file))
 								if not test_binary(file) then
 									test_ok = false
 									break
@@ -1340,20 +1340,20 @@ function download_easytier()
 		end
 		
 		-- 删除失败的文件，继续下一个地址
-		os.execute("rm -f " .. zip_file)
+		os.execute("rm -f " .. shell_quote(zip_file))
 	end
 	
 	if not download_success then
-		os.execute("rm -rf " .. download_dir)
-		os.execute("rm -f " .. progress_file)
+		os.execute("rm -rf " .. shell_quote(download_dir))
+		os.execute("rm -f " .. shell_quote(progress_file))
 		luci.http.write_json({success = false, message = i18n.translate("All download attempts failed")})
 		return
 	end
 	
 	-- 检查是否被取消（替换前）
 	if check_cancelled() then
-		os.execute("rm -rf " .. download_dir)
-		os.execute("rm -f " .. progress_file)
+		os.execute("rm -rf " .. shell_quote(download_dir))
+		os.execute("rm -f " .. shell_quote(progress_file))
 		luci.http.write_json({success = false, message = i18n.translate("Download cancelled")})
 		return
 	end
@@ -1376,29 +1376,29 @@ function download_easytier()
 	
 	-- 安装并验证
 	for _, prog in ipairs(programs) do
-		local result = os.execute("cp " .. prog.src .. " " .. prog.dest .. " 2>/dev/null")
+		local result = os.execute("cp " .. shell_quote(prog.src) .. " " .. shell_quote(prog.dest) .. " 2>/dev/null")
 		if result ~= 0 then
-			os.execute("rm -rf " .. download_dir)
-			os.execute("rm -f " .. progress_file)
+			os.execute("rm -rf " .. shell_quote(download_dir))
+			os.execute("rm -f " .. shell_quote(progress_file))
 			luci.http.write_json({success = false, message = i18n.translate("Failed to install program") .. ": " .. prog.dest})
 			return
 		end
 		
-		os.execute("chmod +x " .. prog.dest)
+		os.execute("chmod +x " .. shell_quote(prog.dest))
 		
 		-- 再次验证安装后的程序
 		if not test_binary(prog.dest) then
-			os.execute("rm -rf " .. download_dir)
-			os.execute("rm -f " .. progress_file)
+			os.execute("rm -rf " .. shell_quote(download_dir))
+			os.execute("rm -f " .. shell_quote(progress_file))
 			luci.http.write_json({success = false, message = i18n.translate("Program is incomplete or architecture mismatch")})
 			return
 		end
 	end
 	
 	-- 7. 清理临时文件和版本缓存
-	os.execute("rm -rf " .. download_dir)
-	os.execute("rm -f " .. cancel_file)
-	os.execute("rm -f " .. progress_file)
+	os.execute("rm -rf " .. shell_quote(download_dir))
+	os.execute("rm -f " .. shell_quote(cancel_file))
+	os.execute("rm -f " .. shell_quote(progress_file))
 	nixio.fs.remove("/tmp/easytier.tag")
 	nixio.fs.remove("/tmp/easytierweb.tag")
 	
