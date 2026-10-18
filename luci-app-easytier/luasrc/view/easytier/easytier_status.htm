@@ -739,7 +739,7 @@ function confirmRestart() {
 	showToast('<%=translate("Restarting service...")%>');
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "restart_service")%>', true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "restart_service")%>', true);
 	xhr.onload = function() {
 		setTimeout(function() { 
 			actionCooldown = false;
@@ -771,7 +771,7 @@ function toggleCore(enabled) {
 	setControlsDisabled(true);
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "toggle_core")%>?enabled=' + (enabled ? '1' : '0'), true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "toggle_core")%>?enabled=' + (enabled ? '1' : '0'), true);
 	xhr.onload = function() {
 		setTimeout(function() { 
 			actionCooldown = false;
@@ -797,7 +797,7 @@ function toggleWeb(enabled) {
 	setControlsDisabled(true);
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "toggle_web")%>?enabled=' + (enabled ? '1' : '0'), true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "toggle_web")%>?enabled=' + (enabled ? '1' : '0'), true);
 	xhr.onload = function() {
 		setTimeout(function() { 
 			actionCooldown = false;
@@ -983,7 +983,7 @@ function updateTunInterface(coreRunning, noTun, devName) {
 	var ifname = devName || 'tun0';
 	
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "get_tun_info")%>?ifname=' + encodeURIComponent(ifname), true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "get_tun_info")%>?ifname=' + encodeURIComponent(ifname), true);
 	xhr.onload = function() {
 		if (xhr.status === 200) {
 			try {
@@ -1078,7 +1078,7 @@ var firstLoad = true;
 // TUN 详情（get_tun_info：多次 ip/ifconfig 派生）降频为每 2 次轮询一次，
 // 速率换算随之用 10s（审计建议 5）。
 var tunPollTick = 0;
-XHR.poll(5, '<%=url("admin", "vpn", "easytier", "api_status")%>', null, function(x, data) {
+XHR.poll(5, '<%=url("admin", "services", "easytier", "api_status")%>', null, function(x, data) {
 	if (!data) return;
 	updateStatus(data);
 	
@@ -1140,14 +1140,14 @@ function closeVersionModal() {
 function confirmRefreshVersion() {
 	closeVersionModal();
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', '<%=url("admin", "vpn", "easytier", "clear_version_cache")%>?type=' + currentVersionType, true);
+	xhr.open('GET', '<%=url("admin", "services", "easytier", "clear_version_cache")%>?type=' + currentVersionType, true);
 	xhr.onload = function() {
 		if (xhr.status === 200) {
 			// 缓存已清，立即拉一次状态刷新版本徽标。
 			// 不能用 XHR.poll(0)：它不会立即刷新，且在新版 LuCI 上会注册一个
 			// 无回调、指向无效 URL 的轮询（每次触发抛异常）。
 			var statusXhr = new XMLHttpRequest();
-			statusXhr.open('GET', '<%=url("admin", "vpn", "easytier", "api_status")%>', true);
+			statusXhr.open('GET', '<%=url("admin", "services", "easytier", "api_status")%>', true);
 			statusXhr.onload = function() {
 				if (statusXhr.status !== 200) return;
 				try { updateStatus(JSON.parse(statusXhr.responseText)); } catch (e) {}
