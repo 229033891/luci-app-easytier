@@ -59,15 +59,7 @@ endef
 # 会调用本钩子，因此 Windows 上打出来的包也会是 LF。
 define Build/Prepare/luci-app-easytier
 	find $(PKG_BUILD_DIR) -type f \( -name '*.htm' -o -name '*.lua' -o -name '*.ut' \) -print0 | \
-		xargs -0 sed -i 's/\r$$//'
-endef
-
-# LuCI 把 .htm 编进 Lua 双引号字符串时只转义 \n。文件若是 CRLF，裸 \r 会让
-# 状态页报 unfinished string。luci.mk 的 Build/Prepare 在拷进 PKG_BUILD_DIR 之后
-# 会调用本钩子，因此 Windows 上打出来的包也会是 LF。
-define Build/Prepare/luci-app-easytier
-	find $(PKG_BUILD_DIR) -type f \( -name '*.htm' -o -name '*.lua' -o -name '*.ut' \) -print0 | \
-		xargs -0 sed -i 's/\r$$//'
+		xargs -0 sed -i 's/\r//g'
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
