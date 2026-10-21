@@ -7,12 +7,7 @@ msgid ""
 "A simple, secure, decentralized VPN solution for intranet penetration, "
 "implemented in Rust using the Tokio framework. Project URL: <a href="
 "\"https://github.com/229033891/EasyTier\" target=\"_blank\">github.com/"
-"229033891/EasyTier</a>&nbsp;&nbsp;<a href=\"http://easytier.cn\" target="
-"\"_blank\">Official Documentation</a>&nbsp;&nbsp;<a href=\"http://qm.qq.com/"
-"cgi-bin/qm/qr?"
-"_wv=1027&k=jhP2Z4UsEZ8wvfGPLrs0VwLKn_uz0Q_p&authKey=OGKSQLfg61YPCpVQuvx"
-"%2BxE7hUKBVBEVi9PljrDKbHlle6xqOXx8sOwPPTncMambK&noverify=0&group_code=949700262\" "
-"target=\"_blank\">QQ Group</a>&nbsp;&nbsp;"
+"229033891/EasyTier</a>&nbsp;&nbsp;"
 msgstr ""
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:640
@@ -27,20 +22,6 @@ msgstr ""
 msgid ""
 "- Program /tmp/easytier-web uploaded successfully, restart the plugin to "
 "take effect"
-msgstr ""
-
-#: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:5
-msgid ""
-"A simple, secure, decentralized VPN solution for intranet penetration, "
-"implemented in Rust using the Tokio framework. Project URL: <a href="
-"\"https://github.com/229033891/EasyTier\" target=\"_blank\">github.com/"
-"229033891/EasyTier</a>&nbsp;&nbsp;<a href=\"http://easytier.cn\" target="
-"\"_blank\">Official Documentation</a>&nbsp;&nbsp;<a href=\"http://qm.qq.com/"
-"cgi-bin/qm/qr?"
-"_wv=1027&k=jhP2Z4UsEZ8wvfGPLrs0VwLKn_uz0Q_p&authKey=OGKSQLfg61YPCpVQuvx"
-"%2BxE7hUKBVBEVi9PljrDKbHlle6xqOXx8sOwPPTncMambK&noverify=0&group_code=949700262\" "
-"target=\"_blank\">QQ Group</a>&nbsp;&nbsp;<a href=\"https://doc.oee.icu"
-"\" target=\"_blank\">Beginner Tutorial</a>"
 msgstr ""
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:720
@@ -616,13 +597,8 @@ msgstr ""
 msgid "Official Server - tcp://public.easytier.top:11010"
 msgstr ""
 
-#: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:35
-msgid ""
-"Official Web Console: <a href=\"https://easytier.cn/web\" target=\"_blank"
-"\">https://easytier.cn/web</a><br>Official Configuration File Generator: <a "
-"href=\"https://easytier.cn/assistant\" target=\"_blank"
-"\">https://easytier.cn/assistant</a><br>Please note "
-"to set the RPC port to 15888"
+#: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:17
+msgid "Please note to set the RPC port to 15888"
 msgstr ""
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:295
@@ -911,12 +887,11 @@ msgstr ""
 msgid "Web Server Address"
 msgstr ""
 
-#: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:65
+#: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:45
 msgid ""
 "Web configuration server address. (-w parameter)<br>For a self-hosted Web "
 "server, use the format: udp://server_address:22020/username<br>For the "
-"official Web server, use the format: username<br>Official Web Console: <a "
-"href='https://easytier.cn/web'>easytier.cn/web</a>"
+"official Web server, use the format: username"
 msgstr ""
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:365
