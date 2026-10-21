@@ -3,4 +3,4 @@
 # Used by: easytier/Makefile, easytier-noweb/Makefile, luci-app-easytier/Makefile
 # (init.d/easytier does not read this file; its PKG_VERSION fallback lives in the Makefiles)
 
-EASYTIER_VERSION=2.7.5
+EASYTIER_VERSION=2.7.8
