@@ -118,11 +118,6 @@ function index()
 	entry({"admin", "services", "easytier", "config"}, cbi("easytier"),_("ET Core"), 2).leaf = true
 	entry({"admin", "services", "easytier", "webconsole"}, template("easytier/easytier_web"),_("ET Web"), 3).leaf = true
 	entry({"admin", "services", "easytier", "log"}, template("easytier/easytier_log"),_("Logs"), 4).leaf = true
-	entry({"admin", "services", "easytier", "upload"}, template("easytier/easytier_upload"),_("Upload Program"), 5).leaf = true
-	entry({"admin", "services", "easytier", "upload_binary"}, call("upload_binary")).leaf = true
-	entry({"admin", "services", "easytier", "get_upload_config"}, call("get_upload_config")).leaf = true
-	entry({"admin", "services", "easytier", "save_upload_config"}, call("save_upload_config")).leaf = true
-	entry({"admin", "services", "easytier", "get_disk_space"}, call("get_disk_space")).leaf = true
 	entry({"admin", "services", "easytier", "get_tun_info"}, call("get_tun_info")).leaf = true
 	entry({"admin", "services", "easytier", "get_log"}, call("get_log")).leaf = true
 	entry({"admin", "services", "easytier", "get_log_size"}, call("get_log_size")).leaf = true
@@ -140,9 +135,6 @@ function index()
 	entry({"admin", "services", "easytier", "restart_service"}, call("restart_service")).leaf = true
 	entry({"admin", "services", "easytier", "toggle_core"}, call("toggle_core")).leaf = true
 	entry({"admin", "services", "easytier", "toggle_web"}, call("toggle_web")).leaf = true
-	entry({"admin", "services", "easytier", "download_easytier"}, call("download_easytier")).leaf = true
-	entry({"admin", "services", "easytier", "download_progress"}, call("download_progress")).leaf = true
-	entry({"admin", "services", "easytier", "cancel_download"}, call("cancel_download")).leaf = true
 end
 
 function act_status()
