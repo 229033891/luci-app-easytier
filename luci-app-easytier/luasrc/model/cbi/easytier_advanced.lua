@@ -1,0 +1,308 @@
+m = Map("easytier")
+
+-- easytier-core advanced settings
+s=m:section(TypedSection, "easytier")
+s.addremove=false
+s.anonymous=true
+
+mapped_listeners = s:option(DynamicList, "mapped_listeners", translate("Public Addresses of Specified Listeners"),
+        translate("Manually specify the public IP address of this machine, so other nodes can connect to this node using "
+                .. "that address (domain names not supported).<br>For example: tcp://123.123.123.123:11223, multiple entries "
+                .. "can be specified. (--mapped-listeners parameter)"))
+mapped_listeners:depends("listenermode", "ON")
+
+rpc_portal = s:option(Value, "rpc_portal", translate("Portal Address Port"),
+        translate("RPC portal address used for management. 0 means a random port, 12345 means listening on port 12345 on localhost, "
+                .. "0.0.0.0:12345 means listening on port 12345 on all interfaces.<br>The default is 0; it is recommended to "
+                .. "use 15888 to avoid failure in obtaining status information (-r parameter)"))
+rpc_portal.placeholder = "15888"
+rpc_portal.default = "15888"
+rpc_portal.datatype = "range(1,65535)"
+rpc_portal:depends("etcmd", "etcmd")
+
+rpc_portal_whitelist = s:option(Value, "rpc_portal_whitelist", translate("RPC Access Whitelist"),
+        translate("rpc portal whitelist, only allow these addresses to access rpc portal (--rpc-portal-whitelist parameter)"))
+rpc_portal_whitelist.placeholder = "127.0.0.1/32,127.0.0.0/8,::1/128"
+rpc_portal_whitelist:depends("etcmd", "etcmd")
+
+instance_name = s:option(Value, "instance_name", translate("Instance Name"),
+        translate("Used to identify the VPN node instance on the same machine. (-m parameter)"))
+instance_name.placeholder = "default"
+instance_name:depends("etcmd", "etcmd")
+
+vpn_portal = s:option(Value, "vpn_portal", translate("VPN Portal URL"),
+        translate("Defines the URL of the VPN portal, allowing other VPN clients to connect.<br>"
+                .. "Example: wg://0.0.0.0:11011/10.14.14.0/24 means the VPN portal is a WireGuard server listening on vpn."
+                .. "example.com:11010, and the VPN clients are in the 10.14.14.0/24 network (--vpn-portal parameter)"))
+vpn_portal.placeholder = "wg://0.0.0.0:11011/10.14.14.0/24"
+vpn_portal:depends("etcmd", "etcmd")
+
+mtu = s:option(Value, "mtu", translate("MTU"),
+        translate("MTU for the TUN device, default is 1380 when unencrypted, and 1360 when encrypted"))
+mtu.datatype = "range(1,1500)"
+mtu.placeholder = "1300"
+mtu:depends("etcmd", "etcmd")
+
+default_protocol = s:option(ListValue, "default_protocol", translate("Default Protocol"),
+        translate("The default protocol used when connecting to peer nodes (--default-protocol parameter)"))
+default_protocol:value("-",translate("default"))
+default_protocol:value("tcp")
+default_protocol:value("udp")
+default_protocol:value("ws")
+default_protocol:value("wss")
+default_protocol:depends("etcmd", "etcmd")
+
+tunname = s:option(Value, "tunname", translate("Virtual Network Interface Name"),
+        translate("Custom name for the virtual TUN interface (--dev-name parameter)<br>"
+                .. "If using web configuration, please use the same virtual network interface name as in the web config for firewall allowance"))
+tunname.placeholder = "tun0"
+tunname:depends("etcmd", "etcmd")
+tunname:depends("etcmd", "web")
+
+disable_encryption = s:option(Flag, "disable_encryption", translate("Disable Encryption"),
+        translate("Disable encryption for communication with peer nodes. "
+                .. "If encryption is disabled, all other nodes must also have encryption disabled (-u parameter)"))
+disable_encryption:depends("etcmd", "etcmd")
+
+encryption_algorithm = s:option(ListValue, "encryption_algorithm", translate("Encryption Algorithm"),
+        translate("encryption algorithm to use, supported: xor, chacha20, aes-gcm, aes-256-gcm, openssl-aes-gcm, openssl-chacha20, openssl-aes-256-gcm. default (aes-gcm) (--encryption-algorithm parameter)"))
+encryption_algorithm.default = "aes-gcm"
+encryption_algorithm:value("xor",translate("xor"))
+encryption_algorithm:value("chacha20",translate("chacha20"))
+encryption_algorithm:value("aes-gcm",translate("aes-gcm"))
+encryption_algorithm:value("aes-256-gcm",translate("aes-256-gcm"))
+encryption_algorithm:value("openssl-aes-gcm",translate("openssl-aes-gcm"))
+encryption_algorithm:value("openssl-chacha20",translate("openssl-chacha20"))
+encryption_algorithm:value("openssl-aes-256-gcm",translate("openssl-aes-256-gcm"))
+encryption_algorithm:depends("etcmd", "etcmd")
+
+multi_thread = s:option(Flag, "multi_thread", translate("Enable Multithreading"),
+        translate("Enable multithreaded operation; single-threaded by default (--multi-thread parameter)"))
+multi_thread:depends("etcmd", "etcmd")
+
+multi_thread_count = s:option(Value, "multi_thread_count", translate("Number of Threads"),
+        translate("the number of threads to use, default is 2, only effective when multi-thread is enabled, must be greater than 2 (--multi-thread-count parameter)"))
+multi_thread_count.placeholder = "2"
+multi_thread_count:depends("etcmd", "etcmd")
+
+disable_ipv6 = s:option(Flag, "disable_ipv6", translate("Disable IPv6"),
+        translate("Do not use IPv6 (--disable-ipv6 parameter)"))
+disable_ipv6:depends("etcmd", "etcmd")
+
+latency_first = s:option(Flag, "latency_first", translate("Enable Latency First"),
+        translate("Latency-first mode: attempts to forward traffic via the lowest latency path. "
+                .. "By default, the shortest path is used (--latency-first parameter)"))
+latency_first:depends("etcmd", "etcmd")
+
+comp = s:option(ListValue, "comp", translate("Compression Algorithm"),
+        translate("Compression algorithm to use (--compression parameter)"))
+comp.default = "none"
+comp:value("none",translate("default"))
+comp:value("zstd",translate("zstd"))
+comp:depends("etcmd", "etcmd")
+
+exit_node = s:option(Flag, "exit_node", translate("Enable Exit Node"),
+        translate("Allow this node to act as an exit node (--enable-exit-node parameter)"))
+exit_node:depends("etcmd", "etcmd")
+
+exit_nodes = s:option(DynamicList, "exit_nodes", translate("Exit Node Addresses"),
+        translate("Exit nodes to forward all traffic through. These are virtual IPv4 addresses. "
+                .. "Priority is determined by the order in the list (--exit-nodes parameter)"))
+exit_nodes:depends("etcmd", "etcmd")
+
+smoltcp = s:option(Flag, "smoltcp", translate("Use Userspace TCP/IP Stack"),
+        translate("Enable smoltcp stack for subnet proxying (--use-smoltcp parameter)"))
+smoltcp:depends("etcmd", "etcmd")
+
+no_tun = s:option(Flag, "no_tun", translate("No TUN Mode"),
+        translate("Do not create a TUN device; subnet proxying can still be used to access nodes (--no-tun parameter)"))
+no_tun:depends("etcmd", "etcmd")
+
+proxy_forward = s:option(Flag, "proxy_forward", translate("Disable Built-in NAT"),
+        translate("Use system kernel to forward subnet proxy packets, disabling built-in NAT (--proxy-forward-by-system parameter)"))
+proxy_forward:depends("etcmd", "etcmd")
+
+manual_routes = s:option(DynamicList, "manual_routes", translate("Route CIDR"),
+        translate("Manually assign route CIDRs. This disables subnet proxying and WireGuard routes propagated from peer nodes "
+                .. "(--manual-routes parameter)"))
+manual_routes.placeholder = "192.168.0.0/16"
+manual_routes:depends("etcmd", "etcmd")
+
+relay_network = s:option(Flag, "relay_network", translate("Forward Whitelisted Network Traffic"),
+        translate("Only forward traffic for whitelisted networks. By default, all networks are allowed"))
+relay_network:depends("etcmd", "etcmd")
+
+whitelist = s:option(DynamicList, "whitelist", translate("Whitelisted Networks"),
+        translate("Only forward traffic for whitelisted networks. Input is a wildcard string, "
+                .. "e.g., '*' (all networks), 'def*' (networks prefixed with 'def')<br>Multiple networks can be specified. "
+                .. "If empty, forwarding is disabled (--relay-network-whitelist parameter)"))
+whitelist:depends("relay_network", "1")
+
+socks_port = s:option(Value, "socks_port", translate("SOCKS5 Port"),
+        translate("Enable a SOCKS5 server to allow SOCKS5 clients to access the virtual network. "
+                .. "Leave blank to disable (--socks5 parameter)"))
+socks_port.datatype = "range(1,65535)"
+socks_port.placeholder = "1080"
+socks_port:depends("etcmd", "etcmd")
+
+disable_p2p = s:option(Flag, "disable_p2p", translate("Disable P2P"),
+        translate("Disable P2P communication; only use nodes specified by -p to forward packets (--disable-p2p parameter)"))
+disable_p2p:depends("etcmd", "etcmd")
+
+p2p_only = s:option(Flag, "p2p_only", translate("P2P only"),
+        translate("only communicate with peers that already establish p2p connection. (--p2p-only parameter)"))
+p2p_only:depends("etcmd", "etcmd")
+
+disable_udp = s:option(Flag, "disable_udp", translate("Disable UDP"),
+        translate("Disable UDP hole punching (--disable-udp-hole-punching parameter)"))
+disable_udp:depends("etcmd", "etcmd")
+
+udp_white_port = s:option(Value, "udp_white_port", translate("UDP whitelist"),
+        translate("udp port whitelist. Supports single ports (53) and ranges (5000-6000). (--udp-whitelist parameter)"))
+udp_white_port:depends("etcmd", "etcmd")
+
+disable_tcp = s:option(Flag, "disable_tcp", translate("Disable TCP"),
+        translate("Disable TCP hole punching (--disable-tcp-hole-punching parameter)"))
+disable_tcp:depends("etcmd", "etcmd")
+
+tcp_white_port = s:option(Value, "tcp_white_port", translate("TCP whitelist"),
+        translate("tcp port whitelist. Supports single ports (53) and ranges (5000-6000). (--tcp-whitelist parameter)"))
+tcp_white_port:depends("etcmd", "etcmd")
+
+disable_sym = s:option(Flag, "disable_sym", translate("Disable sym"),
+        translate("if true, disable udp nat hole punching for symmetric nat (NAT4), which is based on birthday attack and may be blocked by ISP. (--disable-sym-hole-punching parameter)"))
+disable_sym:depends("etcmd", "etcmd")
+
+relay_all = s:option(Flag, "relay_all", translate("Allow Forwarding"),
+        translate("Forward RPC packets from all peer nodes, even if they are not in the relay network whitelist.<br>"
+                .. "This can help peer nodes in non-whitelisted networks establish P2P connections. (--relay-all-peer-rpc parameter)"))
+relay_all:depends("etcmd", "etcmd")
+
+bind_device = s:option(Flag, "bind_device", translate("Bind to Physical NIC Only"),
+        translate("Bind the connector socket to the physical device to avoid routing issues.<br>"
+                .. "For example, if the subnet proxy segment conflicts with a peer node, "
+                .. "binding the physical NIC enables normal communication. (--bind-device parameter)"))
+bind_device.default = "0"
+bind_device:depends("etcmd", "etcmd")
+
+kcp_proxy = s:option(Flag, "kcp_proxy", translate("Enable KCP Proxy"),
+        translate("Convert TCP traffic to KCP traffic to reduce latency and improve speed.<br>"
+                .. "All nodes in the virtual network must be using ET version v2.2.0 or higher for this feature. "
+                .. "(--enable-kcp-proxy parameter)"))
+kcp_proxy:depends("etcmd", "etcmd")
+
+kcp_input = s:option(Flag, "kcp_input", translate("Disable KCP Input"),
+        translate("Disallow other nodes from using KCP proxy TCP streams to this node.<br>"
+                .. "KCP proxy-enabled nodes accessing this node will still use the original method. (--disable-kcp-input parameter)"))
+kcp_input:depends("etcmd", "etcmd")
+
+disable_relay_kcp = s:option(Flag, "disable_relay_kcp", translate("Disable relay kcp"),
+        translate("If true, disable relay kcp packets. avoid consuming too many bandwidth. default is false. (--disable-relay-kcp parameter)"))
+disable_relay_kcp:depends("etcmd", "etcmd")
+
+relay_kcp = s:option(Flag, "relay_kcp", translate("Relay foreign network kcp"),
+        translate("If true, allow relay kcp packets from foreign network. default is false (not forward foreign network kcp packets). (--enable-relay-foreign-network-kcp parameter)"))
+relay_kcp:depends("etcmd", "etcmd")
+
+quic_proxy = s:option(Flag, "quic_proxy", translate("Enable QUIC Proxy"),
+        translate("Proxy tcp streams with QUIC, improving the latency and throughput on the network with udp packet loss.<br>"
+                .. "All nodes in the virtual network must be using ET version v2.3.2 or higher for this feature. "
+                .. "(--enable-quic-proxy parameter)"))
+quic_proxy:depends("etcmd", "etcmd")
+
+quic_input = s:option(Flag, "quic_input", translate("Disable QUIC Input"),
+    translate("Do not allow other nodes to use QUIC to proxy tcp streams to this node.") ..
+    translate("When a node with QUIC proxy enabled accesses this node, the original tcp connection is preserved.") ..
+    translate("<br>QUIC proxy-enabled nodes accessing this node will still use the original method. (--disable-quic-input parameter)"))
+quic_input:depends("etcmd", "etcmd")
+
+port_forward = s:option(DynamicList, "port_forward", translate("Port Forwarding"),
+        translate("Forward a local port to a remote port within the virtual network.<br>"
+                .. "Example: udp://0.0.0.0:12345/10.126.126.1:23456 means forwarding local UDP port 12345 to 10.126.126.1:23456 "
+                .. "in the virtual network.<br>Multiple entries can be specified. (--port-forward parameter)"))
+port_forward:depends("etcmd", "etcmd")
+
+accept_dns = s:option(Flag, "accept_dns", translate("Enable Magic DNS"),
+        translate("With Magic DNS, you can access other nodes using domain names, e.g., <hostname>.et.net. "
+                .. "Magic DNS will modify your system DNS settings, please enable with caution. (--accept-dns parameter)"))
+accept_dns:depends("etcmd", "etcmd")
+
+private_mode = s:option(Flag, "private_mode", translate("Enable Private Mode"),
+        translate("When enabled, nodes with a different network name and password are not allowed to handshake or "
+                .. "relay via this node. (--private-mode parameter)"))
+private_mode:depends("etcmd", "etcmd")
+
+foreign_relay_bps_limit = s:option(Value, "foreign_relay_bps_limit", translate("Forwarding Rate"),
+        translate("the maximum bps limit for foreign network relay, default is no limit. unit: BPS (bytes per second). "
+                .. "(--foreign-relay-bps-limit parameter)"))
+foreign_relay_bps_limit:depends("etcmd", "etcmd")
+
+extra_args = s:option(DynamicList, "extra_args", translate("Extra Parameters"),
+    translate("Additional command-line arguments passed to the backend process"))
+extra_args.placeholder = "--tcp-whitelist=80"
+extra_args.validate = function(self, value, section)
+    if type(value) == "table" then
+        local seen = {}
+        local i
+        for i = 1, #value do
+            local arg = value[i]
+            if arg then
+                arg = tostring(arg):match("^%s*(.-)%s*$")
+                if arg ~= "" then
+                    if seen[arg] then
+                        return nil, translate("Duplicate extra parameter") .. ": " .. arg
+                    end
+                    seen[arg] = true
+                end
+            end
+        end
+    end
+    return value
+end
+extra_args:depends("etcmd", "etcmd")
+
+-- Network Configuration Options
+auto_config_interface = s:option(Flag, "auto_config_interface", translate("Auto Configure Interface"),
+        translate("Automatically create and configure the ET network interface"))
+auto_config_interface.default = "1"
+
+interface_netmask = s:option(Value, "interface_netmask", translate("Interface Netmask"),
+        translate("Subnet mask for the ET interface (default: 255.0.0.0)"))
+interface_netmask.placeholder = "255.0.0.0"
+interface_netmask.default = "255.0.0.0"
+interface_netmask.datatype = "ip4addr"
+interface_netmask:depends("auto_config_interface", "1")
+
+auto_config_firewall = s:option(Flag, "auto_config_firewall", translate("Auto Configure Firewall"),
+        translate("Automatically add and manage firewall rules"))
+auto_config_firewall.default = "1"
+
+et_forward = s:option(MultiValue, "et_forward", translate("Access Control"),
+        translate("Set traffic permission rules between different network zones"))
+et_forward:value("etfwlan", translate("Allow traffic from ET virtual network to LAN"))
+et_forward:value("etfwwan", translate("Allow traffic from ET virtual network to WAN"))
+et_forward:value("lanfwet", translate("Allow traffic from LAN to ET virtual network"))
+et_forward:value("wanfwet", translate("Allow traffic from WAN to ET virtual network"))
+et_forward.rmempty = true
+et_forward.optional = true
+et_forward:depends("auto_config_firewall", "1")
+
+check = s:option(Flag, "check", translate("Connectivity Check"),
+        translate("Enable connectivity check to specify remote device IPs; if all specified IPs fail to ping, "
+                .. "the ET program will restart."))
+
+checkip = s:option(DynamicList, "checkip", translate("Check IPs"),
+        translate("Make sure the remote device IPs entered here are correct and reachable; "
+                .. "incorrect entries may cause ping failures and repeated program restarts."))
+checkip.rmempty = true
+checkip.datatype = "ip4addr"
+checkip:depends("check", "1")
+
+checktime = s:option(ListValue, "checktime", translate("Interval Time (minutes)"),
+        translate("Interval time for checking connectivity; how often the specified IPs are pinged."))
+for s = 1, 60 do
+    checktime:value(s)
+end
+checktime:depends("check", "1")
+
+return m

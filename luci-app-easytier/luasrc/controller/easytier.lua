@@ -115,9 +115,10 @@ function index()
 	entry({"admin", "services"}, firstchild(), _("Services"), 45).dependent = false
 	entry({"admin", "services", "easytier"}, firstchild(),_("ET"), 46).dependent = true
 	entry({"admin", "services", "easytier", "status"}, cbi("easytier_status"),_("Status"), 1).leaf = true
-	entry({"admin", "services", "easytier", "config"}, cbi("easytier"),_("ET Core"), 2).leaf = true
-	entry({"admin", "services", "easytier", "webconsole"}, template("easytier/easytier_web"),_("ET Web"), 3).leaf = true
-	entry({"admin", "services", "easytier", "log"}, template("easytier/easytier_log"),_("Logs"), 4).leaf = true
+	entry({"admin", "services", "easytier", "config"}, cbi("easytier_general"),_("General Settings"), 2).leaf = true
+	entry({"admin", "services", "easytier", "advanced"}, cbi("easytier_advanced"),_("Advanced Settings"), 3).leaf = true
+	entry({"admin", "services", "easytier", "webconsole"}, template("easytier/easytier_web"),_("ET Web"), 4).leaf = true
+	entry({"admin", "services", "easytier", "log"}, template("easytier/easytier_log"),_("Logs"), 5).leaf = true
 	entry({"admin", "services", "easytier", "get_tun_info"}, call("get_tun_info")).leaf = true
 	entry({"admin", "services", "easytier", "get_log"}, call("get_log")).leaf = true
 	entry({"admin", "services", "easytier", "get_log_size"}, call("get_log_size")).leaf = true
