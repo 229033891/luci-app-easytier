@@ -143,8 +143,8 @@ function act_status()
 	local sys  = require "luci.sys"
 	local uci  = require "luci.model.uci".cursor()
 	local port = tonumber(uci:get_first("easytier", "easytier", "web_html_port"))
-	e.crunning = luci.sys.call("pgrep easytier-core >/dev/null") == 0
-	e.wrunning = luci.sys.call("pgrep easytier-web >/dev/null") == 0
+	e.crunning = luci.sys.call("pgrep ET-core >/dev/null") == 0
+	e.wrunning = luci.sys.call("pgrep ET-web-embed >/dev/null") == 0
 	e.port = (port or 0)
 	e.cenabled = uci:get_first("easytier", "easytier", "enabled") == "1"
 	e.wenabled = uci:get_first("easytier", "easytier", "web_enabled") == "1"
@@ -154,8 +154,8 @@ function act_status()
 	e.etwebsta = calc_uptime("/tmp/easytierweb_time")
 	
 	-- CPU / 内存：直接读 /proc，取代每次 2 次 `top -b -n1`（审计建议 4）
-	local core_pid = safe_exec("pidof easytier-core"):match("(%d+)%s*$")
-	local web_pid = safe_exec("pidof easytier-web"):match("(%d+)%s*$")
+	local core_pid = safe_exec("pidof ET-core"):match("(%d+)%s*$")
+	local web_pid = safe_exec("pidof ET-web-embed"):match("(%d+)%s*$")
 	e.etcpu = read_proc_cpu(core_pid)
 	e.etram = read_proc_rss_mb(core_pid)
 	e.etwebcpu = read_proc_cpu(web_pid)
@@ -185,7 +185,7 @@ function act_status()
 	if cached_tag and cached_tag ~= "" then
 		e.ettag = cached_tag:gsub("[\r\n]+", "")
 	else
-		local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
+		local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core"
 		e.ettag = safe_exec(easytierbin .. " -V 2>/dev/null | sed 's/^[^0-9]*//'")
 		if e.ettag == "" or e.ettag == nil then e.ettag = "unknown" end
 		local f = io.open("/tmp/easytier.tag", "w")
@@ -196,7 +196,7 @@ function act_status()
 	if cached_webtag and cached_webtag ~= "" then
 		e.etwebtag = cached_webtag:gsub("[\r\n]+", "")
 	else
-		local easytierwebbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web"
+		local easytierwebbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed"
 		e.etwebtag = safe_exec(easytierwebbin .. " -V 2>/dev/null | sed 's/^[^0-9]*//'")
 		if e.etwebtag == "" or e.etwebtag == nil then e.etwebtag = "unknown" end
 		local f = io.open("/tmp/easytierweb.tag", "w")
@@ -217,8 +217,8 @@ function get_upload_config()
 	http.prepare_content("application/json")
 	
 	local config = {
-		easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core",
-		webbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web",
+		easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core",
+		webbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed",
 		github_proxys = {},
 		fallback_version = uci:get_first("easytier", "easytier", "fallback_version") or "v2.7.9"
 	}
@@ -255,8 +255,8 @@ function save_upload_config()
 	end
 	
 	-- 保存配置
-	uci:set("easytier", "@easytier[0]", "easytierbin", data.easytierbin or "/usr/bin/easytier-core")
-	uci:set("easytier", "@easytier[0]", "webbin", data.webbin or "/usr/bin/easytier-web")
+	uci:set("easytier", "@easytier[0]", "easytierbin", data.easytierbin or "/usr/bin/ET-core")
+	uci:set("easytier", "@easytier[0]", "webbin", data.webbin or "/usr/bin/ET-web-embed")
 	uci:set("easytier", "@easytier[0]", "fallback_version", data.fallback_version or "v2.7.9")
 	
 	-- 删除旧的代理列表
@@ -324,7 +324,7 @@ function get_disk_space()
 				end
 				
 				local dir = full_path:match("(.*/)")
-				local cli_path = (dir or "/usr/bin/") .. "easytier-cli"
+				local cli_path = (dir or "/usr/bin/") .. "ET-cli"
 				if nixio.fs.access(cli_path) then
 					local size = luci.sys.exec("ls -lh " .. shell_quote(cli_path) .. " 2>/dev/null | awk '{print $5}'")
 					if size and size ~= "" then
@@ -577,11 +577,11 @@ function upload_binary()
 		end
 		cleanup_files(tmp_file)
 		
-		-- Normalize current release binary names to plugin install names
+		-- Normalize legacy easytier-* names to Release ET-* install names
 		local rename_map = {
-			["ET-core"] = "easytier-core",
-			["ET-cli"] = "easytier-cli",
-			["ET-web-embed"] = "easytier-web-embed",
+			["easytier-core"] = "ET-core",
+			["easytier-cli"] = "ET-cli",
+			["easytier-web-embed"] = "ET-web-embed",
 		}
 		for src_name, dest_name in pairs(rename_map) do
 			local src = extract_dir .. "/" .. src_name
@@ -595,7 +595,7 @@ function upload_binary()
 			nixio.fs.remove(extract_dir .. "/easytier-web")
 		end
 		
-		local binaries = {"easytier-core", "easytier-cli", "easytier-web-embed"}
+		local binaries = {"ET-core", "ET-cli", "ET-web-embed"}
 		local valid_bins = {}
 		
 		for _, bin in ipairs(binaries) do
@@ -616,18 +616,18 @@ function upload_binary()
 			return
 		end
 		
-		local core_path = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
-		local web_path = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web"
+		local core_path = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core"
+		local web_path = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed"
 		
 		for _, bin in ipairs(valid_bins) do
 			local final_path
-			if bin.name == "easytier-web-embed" then
+			if bin.name == "ET-web-embed" then
 				final_path = web_path
-			elseif bin.name == "easytier-core" then
+			elseif bin.name == "ET-core" then
 				final_path = core_path
-			elseif bin.name == "easytier-cli" then
+			elseif bin.name == "ET-cli" then
 				local core_dir = core_path:match("(.*/)")
-				final_path = (core_dir or "/usr/bin/") .. "easytier-cli"
+				final_path = (core_dir or "/usr/bin/") .. "ET-cli"
 			end
 			
 			os.execute("rm -f " .. shell_quote(final_path))
@@ -665,7 +665,7 @@ function upload_binary()
 		
 		if filename == "easytier-web" then
 			cleanup_files(tmp_file)
-			http.write_json({success = false, message = translate("easytier-web is not used by this plugin, please upload easytier-web-embed")})
+			http.write_json({success = false, message = translate("easytier-web is not used by this plugin, please upload ET-web-embed")})
 			return
 		end
 		
@@ -676,8 +676,8 @@ function upload_binary()
 			return
 		end
 		
-		local core_path = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
-		local web_path = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web"
+		local core_path = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core"
+		local web_path = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed"
 		
 		local final_path
 		if filename == "easytier-web-embed" or filename == "ET-web-embed" then
@@ -686,7 +686,7 @@ function upload_binary()
 			final_path = core_path
 		elseif filename == "easytier-cli" or filename == "ET-cli" then
 			local core_dir = core_path:match("(.*/)")
-			final_path = (core_dir or "/usr/bin/") .. "easytier-cli"
+			final_path = (core_dir or "/usr/bin/") .. "ET-cli"
 		end
 		
 		os.execute("rm -f " .. shell_quote(final_path))
@@ -731,14 +731,14 @@ end
 function act_conninfo()
 	local e = {}
 	local uci = require "luci.model.uci".cursor()
-	local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
-	-- 兼容自定义二进制名：先替换结尾的 easytier-core，否则取同目录下的 easytier-cli
-	local clibin = easytierbin:gsub("easytier%-core$", "easytier-cli")
+	local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core"
+	-- 兼容自定义二进制名：ET-core / 旧 easytier-core → 同目录 ET-cli
+	local clibin = easytierbin:gsub("ET%-core$", "ET-cli"):gsub("easytier%-core$", "ET-cli")
 	if clibin == easytierbin then
-		clibin = (easytierbin:match("^(.*/)") or "/usr/bin/") .. "easytier-cli"
+		clibin = (easytierbin:match("^(.*/)") or "/usr/bin/") .. "ET-cli"
 	end
 	
-	local process_status = luci.sys.exec("pgrep easytier-core")
+	local process_status = luci.sys.exec("pgrep ET-core")
 	
 	if process_status ~= "" then
 		-- CLI 子进程（11 个/次）加缓存：TTL 5s 与轮询对齐，文件名沿用
@@ -790,7 +790,7 @@ function act_conninfo()
 		
 		-- 获取启动参数
 		-- 用单一 PID（多 PID 时 $(pidof) 会拼出 "/proc/111 222/cmdline"）
-		local core_pid = safe_exec("pidof easytier-core"):match("(%d+)%s*$")
+		local core_pid = safe_exec("pidof ET-core"):match("(%d+)%s*$")
 		local cmdhandle = io.popen("cat /proc/" .. (core_pid or "self") .. "/cmdline 2>/dev/null | tr '\\0' ' '")
 		if cmdhandle then
 			e.cmdline = cmdhandle:read("*all") or ""
@@ -1002,7 +1002,7 @@ function reset_database()
 end
 
 function check_web_status()
-	local running = luci.sys.call("pgrep easytier-web >/dev/null") == 0
+	local running = luci.sys.call("pgrep ET-web-embed >/dev/null") == 0
 	local uci = require "luci.model.uci".cursor()
 	local port = uci:get_first("easytier", "easytier", "web_html_port") or "11211"
 	
@@ -1353,14 +1353,14 @@ function download_easytier()
 	
 	-- 3. 从UCI获取路径并安装
 	local uci = require "luci.model.uci".cursor()
-	local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/easytier-core"
-	local easytierwebbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/easytier-web"
+	local easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core"
+	local easytierwebbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed"
 	
 	local core_dir = easytierbin:match("^(.*/)[^/]+$") or "/usr/bin/"
 	
 	local programs = {
 		{src = core_file, dest = easytierbin},
-		{src = cli_file, dest = core_dir .. "easytier-cli"}
+		{src = cli_file, dest = core_dir .. "ET-cli"}
 	}
 	
 	if arch ~= "mips" and arch ~= "mipsel" then

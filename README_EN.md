@@ -99,7 +99,7 @@ opkg install kmod-tun
 
 1. After installing the plugin, navigate to **Services → ET**
 2. Upload EasyTier binary files on the **Upload Program** page, or directly install the ipk/apk package containing the core (easytier.ipk / easytier.apk)
-   - Supports single files: `easytier-core`, `easytier-cli`, `easytier-web-embed`
+   - Supports single files: `ET-core`, `ET-cli`, `ET-web-embed`
    - Supports compressed packages: `.zip`, `.tar.gz`, `.tar`
 3. Configure network parameters on the **EasyTier Core** page
 4. Enable and save the configuration

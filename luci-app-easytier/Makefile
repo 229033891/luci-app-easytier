@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 -include $(dir $(lastword $(MAKEFILE_LIST)))../version.mk
 
 PKG_VERSION:=$(or $(EASYTIER_VERSION),2.7.9)
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 LUCI_TITLE:=LuCI support for EasyTier
 LUCI_DEPENDS:=+kmod-tun +luci-compat
@@ -51,6 +51,22 @@ if [ -d /tmp/et_config_backup ] ; then
   rm -rf /etc/easytier
   mv -f /tmp/et_config_backup /etc/easytier
   echo "请前往 服务 - ET 界面进行重启插件"
+fi
+# Migrate legacy binary paths after restore / upgrade (ET-* only).
+if [ -f /etc/config/easytier ]; then
+  _core=$$(uci -q get easytier.@easytier[0].easytierbin)
+  _web=$$(uci -q get easytier.@easytier[0].webbin)
+  case "$$_core" in
+    ""|/usr/bin/easytier-core|/tmp/easytier-core)
+      uci -q set easytier.@easytier[0].easytierbin=/usr/bin/ET-core
+      ;;
+  esac
+  case "$$_web" in
+    ""|/usr/bin/easytier-web|/tmp/easytier-web|/usr/bin/easytier-web-embed|/tmp/easytier-web-embed)
+      uci -q set easytier.@easytier[0].webbin=/usr/bin/ET-web-embed
+      ;;
+  esac
+  uci -q commit easytier
 fi
 endef
 

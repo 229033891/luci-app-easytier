@@ -105,7 +105,7 @@ opkg install kmod-tun
 
 1. 安装插件后，进入 **服务 → ET**
 2. 在 **上传程序** 页面上传EasyTier二进制文件或直接安装包含核心的ipk/apk包（easytier.ipk easytier.apk）
-   - 支持单个文件：`easytier-core`, `easytier-cli`, `easytier-web-embed`
+   - 支持单个文件：`ET-core`, `ET-cli`, `ET-web-embed`
    - 支持压缩包：`.zip`, `.tar.gz`, `.tar`
 3. 在 **EasyTier Core** 页面配置网络参数
 4. 启用并保存配置

@@ -7,6 +7,27 @@ uci -q batch <<-EOF >/dev/null
 	commit ucitrack
 EOF
 
+# Migrate pre-ET-* install paths (easytier-core / easytier-web) to Release names.
+_core="$(uci -q get easytier.@easytier[0].easytierbin)"
+_web="$(uci -q get easytier.@easytier[0].webbin)"
+case "$_core" in
+	""|/usr/bin/easytier-core|/tmp/easytier-core)
+		uci -q set easytier.@easytier[0].easytierbin=/usr/bin/ET-core
+		;;
+esac
+case "$_web" in
+	""|/usr/bin/easytier-web|/tmp/easytier-web|/usr/bin/easytier-web-embed|/tmp/easytier-web-embed)
+		uci -q set easytier.@easytier[0].webbin=/usr/bin/ET-web-embed
+		;;
+esac
+uci -q commit easytier
+
+# Drop leftover dual-alias binaries after ET-* packaging.
+rm -f /usr/bin/easytier-core /usr/bin/easytier-cli \
+	/usr/bin/easytier-web /usr/bin/easytier-web-embed \
+	/tmp/easytier-core /tmp/easytier-cli \
+	/tmp/easytier-web /tmp/easytier-web-embed 2>/dev/null || true
+
 chmod +x /etc/init.d/easytier
 /etc/init.d/easytier enable
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache

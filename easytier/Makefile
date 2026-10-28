@@ -49,26 +49,24 @@ endef
 
 define Package/$(PKG_NAME)/description
   A simple, decentralized mesh VPN with WireGuard support.
+  Installs Release-aligned binaries: ET-core, ET-cli, ET-web-embed.
 endef
 
 define Package/$(PKG_NAME)/config
 	config EASYTIER_INCLUDE_WEBCONSOLE
-		bool "Include Web Console (easytier-web)"
+		bool "Include Web Console (ET-web-embed)"
 		depends on PACKAGE_$(PKG_NAME)
 		depends on !(mips || mipsel)
 		default y
 		help
-		  Install the easytier-web web console.
+		  Install the ET-web-embed web console.
 endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
-	if [ ! -f $(PKG_BUILD_DIR)/easytier-core ]; then \
+	if [ ! -f $(PKG_BUILD_DIR)/ET-core ]; then \
 		wget https://github.com/229033891/EasyTier/releases/download/v$(PKG_VERSION)/ET-linux-$(APP_ARCH)-v$(PKG_VERSION).zip -O $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip; \
 		unzip -o -j $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip -d $(PKG_BUILD_DIR); \
-		[ -f $(PKG_BUILD_DIR)/ET-core ] && mv -f $(PKG_BUILD_DIR)/ET-core $(PKG_BUILD_DIR)/easytier-core; \
-		[ -f $(PKG_BUILD_DIR)/ET-cli ] && mv -f $(PKG_BUILD_DIR)/ET-cli $(PKG_BUILD_DIR)/easytier-cli; \
-		[ -f $(PKG_BUILD_DIR)/ET-web-embed ] && mv -f $(PKG_BUILD_DIR)/ET-web-embed $(PKG_BUILD_DIR)/easytier-web-embed; \
 		rm -f $(PKG_BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION).zip; \
 	fi
 endef
@@ -78,14 +76,38 @@ endef
 
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(CP) $(PKG_BUILD_DIR)/easytier-core $(1)/usr/bin/
-	chmod 0755 $(1)/usr/bin/easytier-core
-	$(CP) $(PKG_BUILD_DIR)/easytier-cli $(1)/usr/bin/
-	chmod 0755 $(1)/usr/bin/easytier-cli
+	$(CP) $(PKG_BUILD_DIR)/ET-core $(1)/usr/bin/
+	chmod 0755 $(1)/usr/bin/ET-core
+	$(CP) $(PKG_BUILD_DIR)/ET-cli $(1)/usr/bin/
+	chmod 0755 $(1)/usr/bin/ET-cli
 ifdef CONFIG_EASYTIER_INCLUDE_WEBCONSOLE
-	$(CP) $(PKG_BUILD_DIR)/easytier-web-embed $(1)/usr/bin/easytier-web
-	chmod 0755 $(1)/usr/bin/easytier-web
+	$(CP) $(PKG_BUILD_DIR)/ET-web-embed $(1)/usr/bin/
+	chmod 0755 $(1)/usr/bin/ET-web-embed
 endif
+endef
+
+# Upgrade path: old packages installed easytier-core / easytier-web.
+define Package/$(PKG_NAME)/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] && exit 0
+if [ -f /etc/config/easytier ]; then
+	_core=$$(uci -q get easytier.@easytier[0].easytierbin)
+	_web=$$(uci -q get easytier.@easytier[0].webbin)
+	case "$$_core" in
+		""|/usr/bin/easytier-core|/tmp/easytier-core)
+			uci -q set easytier.@easytier[0].easytierbin=/usr/bin/ET-core
+			;;
+	esac
+	case "$$_web" in
+		""|/usr/bin/easytier-web|/tmp/easytier-web|/usr/bin/easytier-web-embed|/tmp/easytier-web-embed)
+			uci -q set easytier.@easytier[0].webbin=/usr/bin/ET-web-embed
+			;;
+	esac
+	uci -q commit easytier
+fi
+rm -f /usr/bin/easytier-core /usr/bin/easytier-cli \
+	/usr/bin/easytier-web /usr/bin/easytier-web-embed 2>/dev/null || true
+exit 0
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

@@ -122,13 +122,13 @@ check_bin() {
 	        if curl -L -k -o /tmp/easytier.zip --connect-timeout 10 --retry 3 "${proxy}https://github.com/229033891/EasyTier/releases/download/${tag}/ET-linux-${cpucore}-${tag}.zip" || \
 		wget --no-check-certificate --timeout=10 --tries=3 -O /tmp/easytier.zip "${proxy}https://github.com/229033891/EasyTier/releases/download/${tag}/ET-linux-${cpucore}-${tag}.zip" ; then
 			unzip -j -q -o /tmp/easytier.zip -d /tmp
-				[ -f /tmp/ET-core ] && mv -f /tmp/ET-core /tmp/easytier-core
-				[ -f /tmp/ET-cli ] && mv -f /tmp/ET-cli /tmp/easytier-cli
-				[ -f /tmp/ET-web-embed ] && mv -f /tmp/ET-web-embed /tmp/easytier-web-embed
-	         	chmod +x /tmp/easytier-core /tmp/easytier-cli /tmp/easytier-web /tmp/easytier-web-embed || true
+				[ -f /tmp/easytier-core ] && mv -f /tmp/easytier-core /tmp/ET-core
+				[ -f /tmp/easytier-cli ] && mv -f /tmp/easytier-cli /tmp/ET-cli
+				[ -f /tmp/easytier-web-embed ] && mv -f /tmp/easytier-web-embed /tmp/ET-web-embed
+	         	chmod +x /tmp/ET-core /tmp/ET-cli /tmp/ET-web-embed || true
 	         	if [ "$(uci -q get easytier.@easytier[0].enabled)" = "1" ] ; then
-	         		mv -f /tmp/easytier-core ${path}/
-	         		mv -f /tmp/easytier-cli ${path}/
+	         		mv -f /tmp/ET-core ${path}/
+	         		mv -f /tmp/ET-cli ${path}/
 	         		chmod +x "$easytierbin"
 	         		if [ "$($easytierbin -h 2>&1 | wc -l)" -gt 3 ] ; then
                    			echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : ${easytierbin} 下载成功" >>/tmp/easytier.log
@@ -137,7 +137,7 @@ check_bin() {
                  		fi
 	         	fi
 	         	if [ "$(uci -q get easytier.@easytier[0].web_enabled)" = "1" ] ; then
-	         		mv -f /tmp/easytier-web-embed ${webbin} || true
+	         		mv -f /tmp/ET-web-embed ${webbin} || true
 	         		chmod +x "$webbin"
 	         		if [ "$($webbin -h 2>&1 | wc -l)" -gt 3 ] ; then
 					echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : ${webbin} 下载成功" >>/tmp/easytierweb.log
@@ -418,20 +418,20 @@ set_firewall() {
 
 start_et() {
                 easytierbin="$(uci -q get easytier.@easytier[0].easytierbin)"
-		[ -z "$easytierbin" ] && easytierbin="/usr/bin/easytier-core" && uci -q set easytier.@easytier[0].easytierbin=/usr/bin/easytier-core
+		[ -z "$easytierbin" ] && easytierbin="/usr/bin/ET-core" && uci -q set easytier.@easytier[0].easytierbin=/usr/bin/ET-core
                 etcmd="$(uci -q get easytier.@easytier[0].etcmd)"
-                echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : easytier-core_${cpucore}开始启动" >>/tmp/easytier.log
+                echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : ET-core_${cpucore}开始启动" >>/tmp/easytier.log
                 path=$(dirname "$easytierbin")
                 
                 if [ ! -f "$easytierbin" ] && [ -n "$size" ] && [ "$size" -lt 5000 ] ; then
-                    echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : 自定义程序路径的可用空间不足，当前可用空间剩余${size}kb,自动切换为内存/tmp/easytier-core" >>/tmp/easytier.log
-                    sed -i "/easytierbin/c option easytierbin '/tmp/easytier-core' " /etc/config/easytier 
-                    easytierbin=/tmp/easytier-core
+                    echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : 自定义程序路径的可用空间不足，当前可用空间剩余${size}kb,自动切换为内存/tmp/ET-core" >>/tmp/easytier.log
+                    sed -i "/easytierbin/c option easytierbin '/tmp/ET-core' " /etc/config/easytier 
+                    easytierbin=/tmp/ET-core
                 fi
                 if [ -f "$easytierbin" ] ; then
 			if [ ! -x "$easytierbin" ] ; then
 				chmod +x "$easytierbin" 
-                		chmod +x ${path}/easytier-cli
+                		chmod +x ${path}/ET-cli
 			fi
 		fi
 		if [ ! -f "$easytierbin" ] || [ "$(($($easytierbin -h 2>&1 | wc -l)))" -lt 3 ] ; then
@@ -443,8 +443,8 @@ start_et() {
                 [ ! -z "$ver" ] && echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : ${easytierbin}当前版本号-${ver} " >>/tmp/easytier.log
                 pgrep -f easytier_check | xargs kill -9 >/dev/null 2>&1
 		
-                ps | grep 'easytier-core' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
-                ps | grep 'easytier-core' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+                ps | grep -E 'easytier-core|ET-core' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
+                ps | grep -E 'easytier-core|ET-core' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 			get_etconfig
           	if [ "$etcmd" = "config" ] ; then 
 			#配置文件启动方式
@@ -661,11 +661,11 @@ EOF
 
 start_web() {
 	webbin="$(uci -q get easytier.@easytier[0].webbin)"
-	[ -z "$webbin" ] && webbin="/usr/bin/easytier-web" && uci -q set easytier.@easytier[0].webbin=/usr/bin/easytier-web
+	[ -z "$webbin" ] && webbin="/usr/bin/ET-web-embed" && uci -q set easytier.@easytier[0].webbin=/usr/bin/ET-web-embed
 	path=$(dirname "$webbin")
-	if [ -f /tmp/easytier-web-embed ] ; then
-		echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : 找到上传的easytier-web程序，替换${webbin} " >>/tmp/easytierweb.log
-		mv -f /tmp/easytier-web-embed "$webbin"
+	if [ -f /tmp/ET-web-embed ] ; then
+		echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : 找到上传的ET-web-embed程序，替换${webbin} " >>/tmp/easytierweb.log
+		mv -f /tmp/ET-web-embed "$webbin"
 	fi
 	if [ ! -f "$webbin" ] || [ "$(($($webbin -h 2>&1 | wc -l)))" -lt 3 ] ; then
 		echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : $webbin 不存在或程序不完整，开始在线下载..." >>/tmp/easytierweb.log
@@ -862,8 +862,8 @@ stop_service() {
 		echo "stop.."
 		if [ "$(uci -q get easytier.@easytier[0].enabled)" = "0" ] ; then
                 	pgrep -f easytier_check | xargs kill -9 >/dev/null 2>&1
-                	ps | grep 'easytier-core' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
-                	ps | grep 'easytier-core' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+                	ps | grep -E 'easytier-core|ET-core' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
+                	ps | grep -E 'easytier-core|ET-core' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
                 	uci -q delete network.EasyTier >/dev/null 2>&1
                 	uci -q delete firewall.easytierzone >/dev/null 2>&1
 	        	uci -q delete firewall.easytierfwlan >/dev/null 2>&1
@@ -897,11 +897,11 @@ stop_service() {
                 	
                 	rm -f /tmp/easytier-cli_* /tmp/easytier_cmd >/dev/null 2>&1
                 	rm -rf /tmp/easytier-*.* /tmp/easytier.log >/dev/null 2>&1
-                	echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : easytier-core 停止运行" >>/tmp/easytier.log
+                	echo "$(date '+%Y-%m-%d %H:%M:%S') easytier : ET-core 停止运行" >>/tmp/easytier.log
 		fi
 		if [ "$(uci -q get easytier.@easytier[0].web_enabled)" = "0" ] ; then
-                	ps | grep 'easytier-web' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
-                	ps | grep 'easytier-web' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+                	ps | grep -E 'easytier-web|ET-web-embed' | grep -v grep | awk '{print $1}' | xargs kill >/dev/null 2>&1
+                	ps | grep -E 'easytier-web|ET-web-embed' | grep -v grep | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 			uci -q delete firewall.easytier_webserver
 			uci -q delete firewall.easytier_webapi
 			uci -q delete firewall.easytier_webhtml

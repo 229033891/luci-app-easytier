@@ -69,11 +69,11 @@ download_binary() {
 		   wget --no-check-certificate --timeout=10 --tries=3 -O /tmp/easytier.zip "${proxy}${download_url}"; then
 			
 			unzip -j -q -o /tmp/easytier.zip -d /tmp
-			# Normalize release names (ET-*) to plugin install names
-			[ -f /tmp/ET-core ] && mv -f /tmp/ET-core /tmp/easytier-core
-			[ -f /tmp/ET-cli ] && mv -f /tmp/ET-cli /tmp/easytier-cli
-			[ -f /tmp/ET-web-embed ] && mv -f /tmp/ET-web-embed /tmp/easytier-web-embed
-			chmod +x /tmp/easytier-core /tmp/easytier-cli /tmp/easytier-web /tmp/easytier-web-embed 2>/dev/null || true
+			# Keep Release names (ET-*); accept legacy easytier-* by renaming to ET-*
+			[ -f /tmp/easytier-core ] && mv -f /tmp/easytier-core /tmp/ET-core
+			[ -f /tmp/easytier-cli ] && mv -f /tmp/easytier-cli /tmp/ET-cli
+			[ -f /tmp/easytier-web-embed ] && mv -f /tmp/easytier-web-embed /tmp/ET-web-embed
+			chmod +x /tmp/ET-core /tmp/ET-cli /tmp/ET-web-embed 2>/dev/null || true
 			rm -rf /tmp/easytier.zip
 			
 			log_message "INFO" "easytier" "下载成功" "/tmp/easytier.log"
@@ -104,15 +104,15 @@ check_and_download() {
 		if download_binary "$tag" "$cpucore" "$path"; then
 			# 移动下载的文件到目标位置
 			if [ "$(uci -q get easytier.@easytier[0].enabled)" = "1" ]; then
-				mv -f /tmp/easytier-core "${path}/" 2>/dev/null
-				mv -f /tmp/easytier-cli "${path}/" 2>/dev/null
+				mv -f /tmp/ET-core "${path}/" 2>/dev/null
+				mv -f /tmp/ET-cli "${path}/" 2>/dev/null
 				chmod +x "$easytierbin" 2>/dev/null
 			fi
 			
 			if [ "$(uci -q get easytier.@easytier[0].web_enabled)" = "1" ]; then
 				local webbin=$(uci -q get easytier.@easytier[0].webbin)
-				[ -z "$webbin" ] && webbin="/usr/bin/easytier-web"
-				mv -f /tmp/easytier-web-embed "$webbin" 2>/dev/null || true
+				[ -z "$webbin" ] && webbin="/usr/bin/ET-web-embed"
+				mv -f /tmp/ET-web-embed "$webbin" 2>/dev/null || true
 				chmod +x "$webbin" 2>/dev/null
 			fi
 			
@@ -132,25 +132,25 @@ handle_uploaded_binary() {
 	local easytierbin="$2"
 	local size=$(get_available_space "$path")
 
-	# Normalize current release names if present
-	[ -f /tmp/ET-core ] && mv -f /tmp/ET-core /tmp/easytier-core
-	[ -f /tmp/ET-cli ] && mv -f /tmp/ET-cli /tmp/easytier-cli
-	[ -f /tmp/ET-web-embed ] && mv -f /tmp/ET-web-embed /tmp/easytier-web-embed
+	# Normalize legacy names to Release ET-*
+	[ -f /tmp/easytier-core ] && mv -f /tmp/easytier-core /tmp/ET-core
+	[ -f /tmp/easytier-cli ] && mv -f /tmp/easytier-cli /tmp/ET-cli
+	[ -f /tmp/easytier-web-embed ] && mv -f /tmp/easytier-web-embed /tmp/ET-web-embed
 	
-	if [ -f /tmp/easytier-core ] || [ -f /tmp/easytier-cli ]; then
+	if [ -f /tmp/ET-core ] || [ -f /tmp/ET-cli ]; then
 		if [ "${path:0:4}" != "/tmp" ]; then
-			chmod +x /tmp/easytier-core 2>/dev/null
-			chmod +x /tmp/easytier-cli 2>/dev/null
+			chmod +x /tmp/ET-core 2>/dev/null
+			chmod +x /tmp/ET-cli 2>/dev/null
 			mkdir -p "$path"
 			
-			log_message "INFO" "easytier" "找到上传的程序/tmp/easytier-core，替换为$easytierbin" "/tmp/easytier.log"
+			log_message "INFO" "easytier" "找到上传的程序/tmp/ET-core，替换为$easytierbin" "/tmp/easytier.log"
 			
-			local upsize=$(du -k /tmp/easytier-core 2>/dev/null | cut -f1)
+			local upsize=$(du -k /tmp/ET-core 2>/dev/null | cut -f1)
 			local result=$((size - upsize))
 			
-			if [ "$(/tmp/easytier-core -h 2>&1 | wc -l)" -gt 3 ] && [ "$result" -gt 1000 ]; then
-				mv -f /tmp/easytier-core "$easytierbin" 2>/dev/null
-				mv -f /tmp/easytier-cli "${path}/easytier-cli" 2>/dev/null
+			if [ "$(/tmp/ET-core -h 2>&1 | wc -l)" -gt 3 ] && [ "$result" -gt 1000 ]; then
+				mv -f /tmp/ET-core "$easytierbin" 2>/dev/null
+				mv -f /tmp/ET-cli "${path}/ET-cli" 2>/dev/null
 				return 0
 			else
 				log_message "WARN" "easytier" "无法替换，上传的程序不完整或自定义路径的可用空间不足，当前空间剩余${size}kb" "/tmp/easytier.log"
