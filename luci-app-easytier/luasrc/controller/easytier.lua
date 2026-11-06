@@ -220,7 +220,7 @@ function get_upload_config()
 		easytierbin = uci:get_first("easytier", "easytier", "easytierbin") or "/usr/bin/ET-core",
 		webbin = uci:get_first("easytier", "easytier", "webbin") or "/usr/bin/ET-web-embed",
 		github_proxys = {},
-		fallback_version = uci:get_first("easytier", "easytier", "fallback_version") or "v2.7.9"
+		fallback_version = uci:get_first("easytier", "easytier", "fallback_version") or "v2.7.11"
 	}
 	
 	-- 读取代理列表（list 类型）
@@ -257,7 +257,7 @@ function save_upload_config()
 	-- 保存配置
 	uci:set("easytier", "@easytier[0]", "easytierbin", data.easytierbin or "/usr/bin/ET-core")
 	uci:set("easytier", "@easytier[0]", "webbin", data.webbin or "/usr/bin/ET-web-embed")
-	uci:set("easytier", "@easytier[0]", "fallback_version", data.fallback_version or "v2.7.9")
+	uci:set("easytier", "@easytier[0]", "fallback_version", data.fallback_version or "v2.7.11")
 	
 	-- 删除旧的代理列表
 	uci:delete("easytier", "@easytier[0]", "github_proxys")
@@ -1194,7 +1194,7 @@ function download_easytier()
 	end
 	
 	local version = req_data.version
-	-- 版本号形如 v2.7.9 / 2.7.9；白名单校验，防止其拼入路径/命令（命令注入）
+	-- 版本号形如 v2.7.11 / 2.7.11；白名单校验，防止其拼入路径/命令（命令注入）
 	if not version:match("^v?[%w%._%-]+$") then
 		luci.http.write_json({success = false, message = "Invalid version parameter"})
 		return
