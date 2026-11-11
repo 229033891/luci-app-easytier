@@ -42,6 +42,45 @@ protocol = "http://"
 		--mem-5: #E57373;
 	}
 }
+/* LuCI 主题跟随：JS 依据主题实际底色挂 et-light / et-dark 类，覆盖浏览器 prefers-color-scheme（特异性高于 :root，两者并存安全） */
+:root.et-light {
+	--card-bg: #ffffff;
+	--card-shadow: rgba(0,0,0,0.08);
+	--text-primary: #333333;
+	--text-secondary: #666666;
+	--border-color: #e0e0e0;
+	--success: #4CAF50;
+	--error: #F44336;
+	--info: #2196F3;
+	--warning: #FF9800;
+	--mem-1: #66BB6A;
+	--mem-2: #9CCC65;
+	--mem-3: #FFCA28;
+	--mem-4: #FF7043;
+	--mem-5: #EF5350;
+}
+:root.et-dark {
+		--card-bg: #1e1e1e;
+	--card-shadow: rgba(0,0,0,0.3);
+	--text-primary: #e0e0e0;
+	--text-secondary: #b0b0b0;
+	--border-color: #3e3e3e;
+	--success: #66BB6A;
+	--error: #EF5350;
+	--info: #42A5F5;
+	--warning: #FFB74D;
+	--mem-1: #81C784;
+	--mem-2: #AED581;
+	--mem-3: #FFD54F;
+	--mem-4: #FF8A65;
+	--mem-5: #E57373;
+}
+/* 暗色下开关轨道用深色（#ccc 在暗卡上过亮） */
+:root.et-dark .slider {
+	background-color: var(--border-color);
+}
+
+
 
 .et-status-card {
 	background: var(--card-bg);
@@ -452,6 +491,35 @@ input:checked + .slider:before {
 }
 </style>
 
+<script>
+/* 跟随 LuCI 主题：按主题实际底色判定明暗并挂 et-light/et-dark 类（而非浏览器 prefers-color-scheme）。
+   探测失败时退回 prefers-color-scheme，行为与旧版一致。 */
+(function () {
+	function probe(el) {
+		try {
+			var bg = getComputedStyle(el).backgroundColor || '';
+			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
+			if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+				return 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3];
+			}
+		} catch (e) {}
+		return null;
+	}
+	var resolved = null;
+	var els = [document.body, document.documentElement];
+	if (document.body && document.body.firstElementChild) els.push(document.body.firstElementChild);
+	for (var i = 0; i < els.length && resolved === null; i++) {
+		var l = probe(els[i]);
+		if (l !== null) resolved = l < 140;
+	}
+	if (resolved === null) {
+		resolved = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	}
+	window.ET_IS_DARK = resolved;
+	document.documentElement.classList.add(resolved ? 'et-dark' : 'et-light');
+})();
+</script>
+
 <div class="et-quick-actions">
 	<div class="et-action-row">
 		<div class="et-quick-title"><%=translate("Quick Actions")%></div>
@@ -530,7 +598,7 @@ function createSVGCircle(percent, color, size) {
 	var offset = circumference - (percent / 100) * circumference;
 	
 	return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" style="transform:rotate(-90deg)">' +
-		'<circle cx="' + size/2 + '" cy="' + size/2 + '" r="' + radius + '" fill="none" stroke="' + (document.documentElement.getAttribute('data-theme') === 'dark' ? '#3e3e3e' : '#e0e0e0') + '" stroke-width="3"/>' +
+		'<circle cx="' + size/2 + '" cy="' + size/2 + '" r="' + radius + '" fill="none" stroke="' + (window.ET_IS_DARK ? '#3e3e3e' : '#e0e0e0') + '" stroke-width="3"/>' +
 		'<circle cx="' + size/2 + '" cy="' + size/2 + '" r="' + radius + '" fill="none" stroke="' + color + '" stroke-width="3" ' +
 		'stroke-dasharray="' + circumference + '" stroke-dashoffset="' + offset + '" ' +
 		'stroke-linecap="round" style="transition:stroke-dashoffset 0.5s ease"/>' +
@@ -862,7 +930,7 @@ function updateTunTrafficChart() {
 	canvas.width = canvas.offsetWidth;
 	
 	var colors = getComputedStyle(document.documentElement);
-	var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+	var isDark = window.ET_IS_DARK;
 	
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	

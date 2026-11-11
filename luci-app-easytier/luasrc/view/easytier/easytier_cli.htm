@@ -29,6 +29,31 @@ local uci = require 'luci.model.uci'.cursor()
 		--gradient-bg: var(--card-bg);
 	}
 }
+/* LuCI 主题跟随：JS 依据主题实际底色挂 et-light / et-dark 类，覆盖浏览器 prefers-color-scheme（特异性高于 :root，两者并存安全） */
+:root.et-light {
+	--card-bg: #ffffff;
+	--card-shadow: rgba(0,0,0,0.1);
+	--text-primary: #2c3e50;
+	--text-secondary: #7f8c8d;
+	--border-color: #ecf0f1;
+	--tab-active: #3498db;
+	--tab-hover: #f8f9fa;
+	--success: #27ae60;
+	--warning: #f39c12;
+	--error: #e74c3c;
+	--gradient-bg: var(--card-bg);
+}
+:root.et-dark {
+		--card-bg: #2c3e50;
+	--card-shadow: rgba(0,0,0,0.3);
+	--text-primary: #ecf0f1;
+	--text-secondary: #bdc3c7;
+	--border-color: #34495e;
+	--tab-active: #3498db;
+	--tab-hover: #34495e;
+	--gradient-bg: var(--card-bg);
+}
+
 
 .et-conninfo-container {
 	background: var(--card-bg);
@@ -300,16 +325,6 @@ local uci = require 'luci.model.uci'.cursor()
 	border-right: 3px solid #999 !important;
 }
 
-.et-table.two-column tr:nth-child(2n) td:last-child {
-	background: #ffffff !important;
-}
-
-.et-table.two-column tr:nth-child(2n+1) td:last-child {
-	background: #f5f5f5 !important;
-}
-	text-align: left;
-	border-right: 3px solid #ccc !important;
-}
 
 .et-table.two-column tr:nth-child(2n) td:last-child {
 	background: #f5f5f5 !important;
@@ -334,11 +349,6 @@ local uci = require 'luci.model.uci'.cursor()
 	.et-table.two-column tr:nth-child(2n+1) td:last-child {
 		background: transparent !important;
 	}
-}
-	background: var(--tab-hover);
-	font-weight: 600;
-	text-align: left;
-	border-right: 2px solid var(--border-color);
 }
 
 .et-table.node-table td:not(:first-child) {
@@ -432,6 +442,35 @@ local uci = require 'luci.model.uci'.cursor()
 }
 
 </style>
+
+<script>
+/* 跟随 LuCI 主题：按主题实际底色判定明暗并挂 et-light/et-dark 类（而非浏览器 prefers-color-scheme）。
+   探测失败时退回 prefers-color-scheme，行为与旧版一致。 */
+(function () {
+	function probe(el) {
+		try {
+			var bg = getComputedStyle(el).backgroundColor || '';
+			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
+			if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+				return 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3];
+			}
+		} catch (e) {}
+		return null;
+	}
+	var resolved = null;
+	var els = [document.body, document.documentElement];
+	if (document.body && document.body.firstElementChild) els.push(document.body.firstElementChild);
+	for (var i = 0; i < els.length && resolved === null; i++) {
+		var l = probe(els[i]);
+		if (l !== null) resolved = l < 140;
+	}
+	if (resolved === null) {
+		resolved = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	}
+	window.ET_IS_DARK = resolved;
+	document.documentElement.classList.add(resolved ? 'et-dark' : 'et-light');
+})();
+</script>
 
 <div class="et-conninfo-container">
 	<div class="et-conninfo-header">

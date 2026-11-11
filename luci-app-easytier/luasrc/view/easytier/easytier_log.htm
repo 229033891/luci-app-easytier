@@ -33,6 +33,32 @@ local translate = i18n.translate
 		--shadow: rgba(0,0,0,0.3);
 	}
 }
+/* LuCI 主题跟随：JS 依据主题实际底色挂 et-light / et-dark 类，覆盖浏览器 prefers-color-scheme（特异性高于 :root，两者并存安全） */
+:root.et-light {
+	--log-bg: #ffffff;
+	--log-text: #333333;
+	--log-border: #e0e0e0;
+	--log-header-bg: #f5f5f5;
+	--log-info: #2196F3;
+	--log-warn: #FF9800;
+	--log-error: #F44336;
+	--log-hover: #f0f0f0;
+	--tab-active: #2196F3;
+	--shadow: rgba(0,0,0,0.1);
+}
+:root.et-dark {
+		--log-bg: #1e1e1e;
+	--log-text: #d4d4d4;
+	--log-border: #3e3e3e;
+	--log-header-bg: #252525;
+	--log-info: #4FC3F7;
+	--log-warn: #FFB74D;
+	--log-error: #EF5350;
+	--log-hover: #2a2a2a;
+	--tab-active: #42A5F5;
+	--shadow: rgba(0,0,0,0.3);
+}
+
 
 .log-container {
 	background: var(--log-bg);
@@ -462,6 +488,35 @@ local translate = i18n.translate
 	}
 }
 </style>
+
+<script>
+/* 跟随 LuCI 主题：按主题实际底色判定明暗并挂 et-light/et-dark 类（而非浏览器 prefers-color-scheme）。
+   探测失败时退回 prefers-color-scheme，行为与旧版一致。 */
+(function () {
+	function probe(el) {
+		try {
+			var bg = getComputedStyle(el).backgroundColor || '';
+			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
+			if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+				return 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3];
+			}
+		} catch (e) {}
+		return null;
+	}
+	var resolved = null;
+	var els = [document.body, document.documentElement];
+	if (document.body && document.body.firstElementChild) els.push(document.body.firstElementChild);
+	for (var i = 0; i < els.length && resolved === null; i++) {
+		var l = probe(els[i]);
+		if (l !== null) resolved = l < 140;
+	}
+	if (resolved === null) {
+		resolved = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+	}
+	window.ET_IS_DARK = resolved;
+	document.documentElement.classList.add(resolved ? 'et-dark' : 'et-light');
+})();
+</script>
 
 <div class="log-container">
 	<div class="log-header">
