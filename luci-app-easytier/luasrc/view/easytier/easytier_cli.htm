@@ -348,54 +348,79 @@ local uci = require 'luci.model.uci'.cursor()
 	text-align: left;
 }
 
-/* 两列表格 - 左侧作为表头 */
+/* 两列表格（本机信息等）- 左列为名称列
+   斑马纹统一画在行上、单元格保持透明，左列再叠一层固定色调：
+   两列的明暗节奏完全同步（旧写法左列固定色、右列单独斑马，行与行之间会出现色差断层） */
+.et-table.two-column td {
+	background: transparent !important;
+}
+
+.et-table.two-column tr:nth-child(2n) {
+	background: #ffffff;
+}
+
+.et-table.two-column tr:nth-child(2n+1) {
+	background: #f5f5f5;
+}
+
 .et-table.two-column td:first-child {
-	background: #e8e8e8 !important;
+	background-image: linear-gradient(rgba(0, 0, 0, 0.09), rgba(0, 0, 0, 0.09)) !important;
 	font-weight: 600;
 	text-align: left;
-	border-right: 3px solid #999 !important;
+	border-right: 2px solid #ccc !important;
 }
 
-
-.et-table.two-column tr:nth-child(2n) td:last-child {
-	background: #f5f5f5 !important;
-}
-
-.et-table.two-column tr:nth-child(2n+1) td:last-child {
-	background: #ffffff !important;
+.et-table.two-column tr:hover {
+	background: rgba(52, 152, 219, 0.12) !important;
 }
 
 @media (prefers-color-scheme: dark) {
 	.et-table.node-table th:first-child,
-	.et-table.node-table td:first-child,
-	.et-table.two-column td:first-child {
+	.et-table.node-table td:first-child {
 		background: #2a2a2a !important;
 		border-right: 3px solid #444 !important;
 	}
 	
-	.et-table.two-column tr:nth-child(2n) td:last-child {
-		background: rgba(255,255,255,0.05) !important;
+	.et-table.two-column tr:nth-child(2n) {
+		background: rgba(255,255,255,0.05);
 	}
 	
-	.et-table.two-column tr:nth-child(2n+1) td:last-child {
-		background: transparent !important;
+	.et-table.two-column tr:nth-child(2n+1) {
+		background: transparent;
+	}
+	
+	.et-table.two-column td:first-child {
+		background-image: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)) !important;
+		border-right: 2px solid #444 !important;
+	}
+	
+	.et-table.two-column tr:hover {
+		background: rgba(52, 152, 219, 0.14) !important;
 	}
 }
 
-/* 暗色模式（跟随 LuCI 主题：node-table / two-column 首列深色，与上方 prefers-color-scheme 等效） */
+/* 暗色模式（跟随 LuCI 主题：与上方 prefers-color-scheme 深色规则等效） */
 :root.et-dark .et-table.node-table th:first-child,
-:root.et-dark .et-table.node-table td:first-child,
-:root.et-dark .et-table.two-column td:first-child {
+:root.et-dark .et-table.node-table td:first-child {
 	background: #2a2a2a !important;
 	border-right: 3px solid #444 !important;
 }
 
-:root.et-dark .et-table.two-column tr:nth-child(2n) td:last-child {
-	background: rgba(255,255,255,0.05) !important;
+:root.et-dark .et-table.two-column tr:nth-child(2n) {
+	background: rgba(255,255,255,0.05);
 }
 
-:root.et-dark .et-table.two-column tr:nth-child(2n+1) td:last-child {
-	background: transparent !important;
+:root.et-dark .et-table.two-column tr:nth-child(2n+1) {
+	background: transparent;
+}
+
+:root.et-dark .et-table.two-column td:first-child {
+	background-image: linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05)) !important;
+	border-right: 2px solid #444 !important;
+}
+
+:root.et-dark .et-table.two-column tr:hover {
+	background: rgba(52, 152, 219, 0.14) !important;
 }
 
 .et-table.node-table td:not(:first-child) {
