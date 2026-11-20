@@ -22,6 +22,7 @@ protocol = "http://"
 	--mem-3: #FFCA28;
 	--mem-4: #FF7043;
 	--mem-5: #EF5350;
+	--upload-hover: rgba(0,0,0,0.03);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -40,6 +41,7 @@ protocol = "http://"
 		--mem-3: #FFD54F;
 		--mem-4: #FF8A65;
 		--mem-5: #E57373;
+		--upload-hover: rgba(255,255,255,0.05);
 	}
 }
 /* LuCI 主题跟随：JS 依据主题实际底色挂 et-light / et-dark 类，覆盖浏览器 prefers-color-scheme（特异性高于 :root，两者并存安全） */
@@ -58,6 +60,7 @@ protocol = "http://"
 	--mem-3: #FFCA28;
 	--mem-4: #FF7043;
 	--mem-5: #EF5350;
+	--upload-hover: rgba(0,0,0,0.03);
 }
 :root.et-dark {
 		--card-bg: #1e1e1e;
@@ -74,9 +77,11 @@ protocol = "http://"
 	--mem-3: #FFD54F;
 	--mem-4: #FF8A65;
 	--mem-5: #E57373;
+	--upload-hover: rgba(255,255,255,0.05);
 }
-/* 暗色下开关轨道用深色（#ccc 在暗卡上过亮） */
-:root.et-dark .slider {
+/* 暗色下开关轨道用深色（#ccc 在暗卡上过亮）。只作用于未选中态，
+   避免特异性高于 input:checked + .slider 而把"开"的绿色也覆盖掉 */
+:root.et-dark input:not(:checked) + .slider {
 	background-color: var(--border-color);
 }
 
@@ -85,14 +90,14 @@ protocol = "http://"
 .et-status-card {
 	background: var(--card-bg);
 	border-radius: 12px;
-	padding: 20px;
+	padding: 14px 16px;
 	box-shadow: 0 2px 8px var(--card-shadow);
 	border: 1px solid var(--border-color);
-	margin: 16px 0;
+	margin: 12px 0;
 }
 
 .et-service-section {
-	padding: 16px 0;
+	padding: 10px 0;
 	border-bottom: 1px solid var(--border-color);
 }
 
@@ -102,7 +107,7 @@ protocol = "http://"
 }
 
 .et-service-section.service-stopped {
-	padding: 8px 0;
+	padding: 6px 0;
 }
 
 .et-service-section.service-stopped .et-service-header {
@@ -113,7 +118,7 @@ protocol = "http://"
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	margin-bottom: 16px;
+	margin-bottom: 8px;
 }
 
 .et-service-title {
@@ -165,15 +170,15 @@ protocol = "http://"
 .et-metrics-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-	gap: 12px;
-	margin-bottom: 12px;
+	gap: 8px;
+	margin-bottom: 0;
 }
 
 .et-metric-item {
 	display: flex;
 	align-items: center;
-	gap: 10px;
-	padding: 10px;
+	gap: 8px;
+	padding: 6px 8px;
 	background: var(--card-bg);
 	border: 1px solid var(--border-color);
 	border-radius: 8px;
@@ -181,6 +186,14 @@ protocol = "http://"
 
 .et-metric-icon {
 	flex-shrink: 0;
+	line-height: 0;
+}
+
+/* 图标统一缩到 30px，收紧指标条高度 */
+.et-metric-icon svg {
+	width: 30px;
+	height: 30px;
+	display: block;
 }
 
 .et-metric-info {
@@ -203,7 +216,9 @@ protocol = "http://"
 	white-space: nowrap;
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	flex-wrap: wrap;      /* 窄卡片里「新版本」徽章换到第二行，而不是把版本号挤成省略号 */
+	column-gap: 6px;
+	row-gap: 2px;
 }
 
 .et-metric-value.mem-level-1 { color: var(--mem-1); }
@@ -212,8 +227,18 @@ protocol = "http://"
 .et-metric-value.mem-level-4 { color: var(--mem-4); }
 .et-metric-value.mem-level-5 { color: var(--mem-5); }
 
+/* 版本号等长文本过长时显示省略号，而不是被卡片边缘硬切。
+   排除「新版本」徽章：它带一个 -6px 的左箭头伪元素，overflow:hidden 会把箭头裁掉 */
+.et-metric-value > span:not(.et-version-badge) {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
 .et-version-badge {
 	display: inline-block;
+	flex-shrink: 0;
 	padding: 6px 12px;
 	background: rgba(255, 152, 0, 0.15);
 	color: var(--warning);
@@ -236,6 +261,19 @@ protocol = "http://"
 	border-top: 6px solid transparent;
 	border-bottom: 6px solid transparent;
 	border-right: 6px solid rgba(255, 152, 0, 0.15);
+}
+
+/* 手机两列布局下单个指标只有 100px 出头，徽章改为可折行（不用 overflow:hidden，
+   否则会把左侧小箭头一起裁掉），保证「New Version: x.y.z」完整可读 */
+@media (max-width: 480px) {
+	.et-version-badge {
+		box-sizing: border-box;
+		margin-left: 6px;
+		max-width: calc(100% - 6px);   /* 不限制宽度时 flex 子项按 max-content 取宽，white-space:normal 也不会折行 */
+		padding: 4px 8px;
+		white-space: normal;
+		line-height: 1.35;
+	}
 }
 
 .et-btn {
@@ -262,7 +300,8 @@ protocol = "http://"
 	padding: 20px 12px;
 	font-size: 13px;
 	font-style: italic;
-	margin: -20px;
+	/* 与 .et-status-card 的 padding 一致，避免空状态超出卡片边缘 */
+	margin: -14px -16px;
 }
 
 .version-modal {
@@ -366,56 +405,90 @@ protocol = "http://"
 
 @media (max-width: 768px) {
 	.et-status-card {
-		padding: 16px;
+		padding: 12px;
+	}
+
+	/* 卡片内边距在手机上收到 12px，空状态负边距同步，避免露出白色直角 */
+	.et-status-card.et-status-empty .et-empty {
+		margin: -12px;
 	}
 	
+	/* 手机端两列而非单列，避免指标条把卡片拉得过长 */
 	.et-metrics-grid {
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 	
 	.et-service-section {
-		padding: 12px 0;
+		padding: 8px 0;
 	}
 }
 
+/* 快捷操作：单行紧凑布局（标题 + 两个开关 + 重启），窄屏自动换行 */
 .et-quick-actions {
 	background: var(--card-bg);
 	border-radius: 12px;
-	padding: 20px;
+	padding: 12px 18px;
 	box-shadow: 0 2px 8px var(--card-shadow);
-	margin-bottom: 20px;
-	margin-top: 20px;
+	border: 1px solid var(--border-color);
+	margin: 12px 0;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 20px;
 }
 
 .et-quick-title {
-	font-size: 18px;
+	font-size: 15px;
 	font-weight: 600;
 	color: var(--text-primary);
-	margin-bottom: 16px;
+	margin: 0 auto 0 0;
 }
 
-.et-action-row {
+.et-quick-group {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	padding: 12px 0;
-	border-bottom: 1px solid var(--border-color);
-}
-
-.et-action-row:last-child {
-	border-bottom: none;
+	gap: 8px;
 }
 
 .et-action-label {
-	font-size: 14px;
+	font-size: 13px;
 	font-weight: 500;
 	color: var(--text-primary);
+	white-space: nowrap;
 }
 
-.et-action-controls {
-	display: flex;
-	align-items: center;
-	gap: 12px;
+/* 窄屏：改为两行网格——第一行 标题+重启，第二行 两个开关 */
+@media (max-width: 600px) {
+	.et-quick-actions {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		gap: 10px 12px;
+		padding: 10px 14px;
+	}
+
+	.et-quick-title {
+		grid-column: 1;
+		grid-row: 1;
+		margin: 0;
+	}
+
+	.et-restart-btn {
+		grid-column: 2;
+		grid-row: 1;
+		justify-self: end;
+	}
+
+	.et-quick-group:nth-child(2) {
+		grid-column: 1;
+		grid-row: 2;
+	}
+
+	.et-quick-group:nth-child(3) {
+		grid-column: 2;
+		grid-row: 2;
+		justify-self: end;
+	}
 }
 
 .switch {
@@ -464,13 +537,14 @@ input:checked + .slider:before {
 }
 
 .et-restart-btn {
-	padding: 6px 16px;
+	padding: 5px 14px;
 	background: #FF5722;
 	color: white;
 	border: none;
 	border-radius: 6px;
 	cursor: pointer;
 	font-size: 13px;
+	line-height: 18px;
 	transition: all 0.3s;
 }
 
@@ -493,13 +567,16 @@ input:checked + .slider:before {
 
 <script>
 /* 跟随 LuCI 主题：按主题实际底色判定明暗并挂 et-light/et-dark 类（而非浏览器 prefers-color-scheme）。
+   同时把探测到的主题真实底色写入 --card-bg，让卡片背景精确跟随当前主题。
    探测失败时退回 prefers-color-scheme，行为与旧版一致。 */
 (function () {
+	var themeBg = null;
 	function probe(el) {
 		try {
 			var bg = getComputedStyle(el).backgroundColor || '';
 			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
 			if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+				themeBg = bg;
 				return 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3];
 			}
 		} catch (e) {}
@@ -517,32 +594,29 @@ input:checked + .slider:before {
 	}
 	window.ET_IS_DARK = resolved;
 	document.documentElement.classList.add(resolved ? 'et-dark' : 'et-light');
+	if (themeBg) {
+		document.documentElement.style.setProperty('--card-bg', themeBg);
+	}
 })();
 </script>
 
 <div class="et-quick-actions">
-	<div class="et-action-row">
-		<div class="et-quick-title"><%=translate("Quick Actions")%></div>
-		<button class="et-restart-btn" id="restartBtn" onclick="restartService(); return false;"><%=translate("Restart")%></button>
+	<div class="et-quick-title"><%=translate("Quick Actions")%></div>
+	<div class="et-quick-group">
+		<span class="et-action-label">ET Core</span>
+		<label class="switch">
+			<input type="checkbox" id="coreSwitch" disabled>
+			<span class="slider"></span>
+		</label>
 	</div>
-	<div class="et-action-row">
-		<div class="et-action-label">ET Core</div>
-		<div class="et-action-controls">
-			<label class="switch">
-				<input type="checkbox" id="coreSwitch" disabled>
-				<span class="slider"></span>
-			</label>
-		</div>
+	<div class="et-quick-group">
+		<span class="et-action-label">ET Web</span>
+		<label class="switch">
+			<input type="checkbox" id="webSwitch" disabled>
+			<span class="slider"></span>
+		</label>
 	</div>
-	<div class="et-action-row">
-		<div class="et-action-label">ET Web</div>
-		<div class="et-action-controls">
-			<label class="switch">
-				<input type="checkbox" id="webSwitch" disabled>
-				<span class="slider"></span>
-			</label>
-		</div>
-	</div>
+	<button class="et-restart-btn" id="restartBtn" onclick="restartService(); return false;"><%=translate("Restart")%></button>
 </div>
 
 <div class="et-status-card et-status-empty" id="easytier_status">

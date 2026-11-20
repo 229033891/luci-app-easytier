@@ -317,6 +317,10 @@ msgstr "启用多线程"
 msgid "Enable Private Mode"
 msgstr "启用私有模式"
 
+#: applications/luci-app-easytier/luasrc/view/easytier/easytier_web.htm:624
+msgid "Enable or disable the console from Quick Actions on the Status page"
+msgstr "启用/停用请到「状态」页的快捷操作中切换"
+
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:305
 msgid ""
 "Enable a SOCKS5 server to allow SOCKS5 clients to access the virtual "
@@ -404,6 +408,10 @@ msgstr "基本设置"
 #: applications/luci-app-easytier/root/usr/share/rpcd/acl.d/luci-app-easytier.json:3
 msgid "Grant UCI access for luci-app-easytier"
 msgstr "授予UCI访问luci-app-easytier的权限"
+
+#: applications/luci-app-easytier/luasrc/view/easytier/easytier_web.htm:625
+msgid "Go to Status"
+msgstr "前往状态页"
 
 #: applications/luci-app-easytier/luasrc/model/cbi/easytier.lua:187
 msgid "Hostname"

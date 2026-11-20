@@ -872,7 +872,8 @@ function save_web_config()
 	local uci = require "luci.model.uci".cursor()
 	local http = require "luci.http"
 	
-	local web_enabled = http.formvalue("web_enabled") or "0"
+	-- 启用/停用已统一到「状态」页的快捷操作，这里只在被显式提交时才改写，避免保存参数时误改开关状态
+	local web_enabled = http.formvalue("web_enabled")
 	local web_db_path = http.formvalue("web_db_path") or "/etc/easytier/et.db"
 	local web_protocol = http.formvalue("web_protocol") or "udp"
 	local web_port = http.formvalue("web_port") or "22020"
@@ -905,7 +906,9 @@ function save_web_config()
 	local web_web_instance_id = http.formvalue("web_web_instance_id") or ""
 	local web_web_instance_api_base_url = http.formvalue("web_web_instance_api_base_url") or ""
 	
-	uci:set("easytier", "@easytier[0]", "web_enabled", web_enabled)
+	if web_enabled ~= nil and web_enabled ~= "" then
+		uci:set("easytier", "@easytier[0]", "web_enabled", web_enabled)
+	end
 	uci:set("easytier", "@easytier[0]", "web_db_path", web_db_path)
 	uci:set("easytier", "@easytier[0]", "web_protocol", web_protocol)
 	uci:set("easytier", "@easytier[0]", "web_port", web_port)

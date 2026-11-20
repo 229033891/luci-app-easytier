@@ -19,13 +19,13 @@ local uci = require 'luci.model.uci'.cursor()
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--card-bg: #2c3e50;
+		--card-bg: #1e1e1e;
 		--card-shadow: rgba(0,0,0,0.3);
 		--text-primary: #ecf0f1;
 		--text-secondary: #bdc3c7;
-		--border-color: #34495e;
+		--border-color: #3e3e3e;
 		--tab-active: #3498db;
-		--tab-hover: #34495e;
+		--tab-hover: #2a2a2a;
 		--gradient-bg: var(--card-bg);
 	}
 }
@@ -44,13 +44,13 @@ local uci = require 'luci.model.uci'.cursor()
 	--gradient-bg: var(--card-bg);
 }
 :root.et-dark {
-		--card-bg: #2c3e50;
+		--card-bg: #1e1e1e;
 	--card-shadow: rgba(0,0,0,0.3);
 	--text-primary: #ecf0f1;
 	--text-secondary: #bdc3c7;
-	--border-color: #34495e;
+	--border-color: #3e3e3e;
 	--tab-active: #3498db;
-	--tab-hover: #34495e;
+	--tab-hover: #2a2a2a;
 	--gradient-bg: var(--card-bg);
 }
 
@@ -152,13 +152,19 @@ local uci = require 'luci.model.uci'.cursor()
 	background: var(--text-primary);
 }
 
+/* 页签溢出时右侧渐隐，提示还有更多页签 */
+.et-tabs-container.tabs-overflow {
+	-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+	mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+
 .et-tabs {
 	display: flex;
 	min-width: max-content;
 }
 
 .et-tab {
-	padding: 16px 24px;
+	padding: 13px 18px;
 	cursor: pointer;
 	border: none;
 	background: none;
@@ -170,6 +176,11 @@ local uci = require 'luci.model.uci'.cursor()
 	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	position: relative;
 	overflow: hidden;
+}
+
+/* 内容为“暂无数据”的页签自动隐藏（updateConnInfo 里切换该类） */
+.et-tab.et-tab-hidden {
+	display: none;
 }
 
 .et-tab::before {
@@ -206,7 +217,7 @@ local uci = require 'luci.model.uci'.cursor()
 .et-tab-content {
 	display: none;
 	padding: 24px;
-	min-height: 200px;
+	min-height: 0;
 	animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -300,7 +311,27 @@ local uci = require 'luci.model.uci'.cursor()
 	}
 }
 
-.et-table tr:hover td {
+/* 暗色模式（跟随 LuCI 主题：与 prefers-color-scheme 深色规则等效，避免主题深色但系统浅色时表格白底白字） */
+:root.et-dark .et-table th {
+	background: #2a2a2a;
+	border: 2px solid #444;
+}
+
+:root.et-dark .et-table td {
+	background: transparent;
+	border: 2px solid #333;
+}
+
+:root.et-dark .et-table tr:nth-child(2n) td {
+	background: transparent;
+}
+
+:root.et-dark .et-table tr:nth-child(2n+1) td {
+	background: rgba(255,255,255,0.05);
+}
+
+.et-table tr:hover td,
+:root.et-dark .et-table tr:hover td {
 	background: rgba(52, 152, 219, 0.1);
 }
 
@@ -349,6 +380,22 @@ local uci = require 'luci.model.uci'.cursor()
 	.et-table.two-column tr:nth-child(2n+1) td:last-child {
 		background: transparent !important;
 	}
+}
+
+/* 暗色模式（跟随 LuCI 主题：node-table / two-column 首列深色，与上方 prefers-color-scheme 等效） */
+:root.et-dark .et-table.node-table th:first-child,
+:root.et-dark .et-table.node-table td:first-child,
+:root.et-dark .et-table.two-column td:first-child {
+	background: #2a2a2a !important;
+	border-right: 3px solid #444 !important;
+}
+
+:root.et-dark .et-table.two-column tr:nth-child(2n) td:last-child {
+	background: rgba(255,255,255,0.05) !important;
+}
+
+:root.et-dark .et-table.two-column tr:nth-child(2n+1) td:last-child {
+	background: transparent !important;
 }
 
 .et-table.node-table td:not(:first-child) {
@@ -445,13 +492,16 @@ local uci = require 'luci.model.uci'.cursor()
 
 <script>
 /* 跟随 LuCI 主题：按主题实际底色判定明暗并挂 et-light/et-dark 类（而非浏览器 prefers-color-scheme）。
+   同时把探测到的主题真实底色写入 --card-bg / --gradient-bg，让卡片背景精确跟随当前主题。
    探测失败时退回 prefers-color-scheme，行为与旧版一致。 */
 (function () {
+	var themeBg = null;
 	function probe(el) {
 		try {
 			var bg = getComputedStyle(el).backgroundColor || '';
 			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\)/);
 			if (m && (m[4] === undefined || parseFloat(m[4]) > 0.5)) {
+				themeBg = bg;
 				return 0.299 * m[1] + 0.587 * m[2] + 0.114 * m[3];
 			}
 		} catch (e) {}
@@ -469,6 +519,10 @@ local uci = require 'luci.model.uci'.cursor()
 	}
 	window.ET_IS_DARK = resolved;
 	document.documentElement.classList.add(resolved ? 'et-dark' : 'et-light');
+	if (themeBg) {
+		document.documentElement.style.setProperty('--card-bg', themeBg);
+		document.documentElement.style.setProperty('--gradient-bg', themeBg);
+	}
 })();
 </script>
 
@@ -491,7 +545,6 @@ local uci = require 'luci.model.uci'.cursor()
 			<button class="et-tab" data-tab="connector"><%:Connector%></button>
 			<button class="et-tab" data-tab="stun"><%:STUN%></button>
 			<button class="et-tab" data-tab="peercenter"><%:Peer Center%></button>
-			<button class="et-tab" data-tab="vpnportal"><%:VPN Portal%></button>
 			<button class="et-tab" data-tab="proxy"><%:Proxy%></button>
 			<button class="et-tab" data-tab="acl"><%:ACL%></button>
 			<button class="et-tab" data-tab="mappedlistener"><%:Mapped Listener%></button>
@@ -531,12 +584,6 @@ local uci = require 'luci.model.uci'.cursor()
 		</div>
 	</div>
 	<div class="et-tab-content" id="tab_peercenter">
-		<div class="et-loading">
-			<div class="et-loading-spinner"></div>
-			<%:Collecting data...%>
-		</div>
-	</div>
-	<div class="et-tab-content" id="tab_vpnportal">
 		<div class="et-loading">
 			<div class="et-loading-spinner"></div>
 			<%:Collecting data...%>
@@ -1137,7 +1184,6 @@ function updateConnInfo(data) {
 		{id: 'connector', key: 'connector'},
 		{id: 'stun', key: 'stun'},
 		{id: 'peercenter', key: 'peer_center'},
-		{id: 'vpnportal', key: 'vpn_portal'},
 		{id: 'proxy', key: 'proxy'},
 		{id: 'acl', key: 'acl'},
 		{id: 'mappedlistener', key: 'mapped_listener'},
@@ -1151,7 +1197,58 @@ function updateConnInfo(data) {
 			el.innerHTML = parseTable(data[sec.key], sec.id);
 		}
 	});
+
+	updateTabVisibility(data, sections);
+	updateTabsOverflow();
 }
+
+/* 内容为空的页签（渲染后是“暂无数据”）自动隐藏；当前选中页签被隐藏时切到第一个有内容的页签。
+   错误提示不隐藏，便于用户看到失败原因。 */
+function updateTabVisibility(data, sections) {
+	var firstVisible = null;
+	var hidden = [];
+
+	sections.forEach(function(sec) {
+		var btn = document.querySelector('.et-tab[data-tab="' + sec.id + '"]');
+		if (!btn) return;
+		var raw = data[sec.key];
+		var isEmpty = (raw === undefined) || (raw === null) || (String(raw).trim() === '');
+		btn.classList.toggle('et-tab-hidden', isEmpty);
+		if (isEmpty) {
+			hidden.push(btn);
+		} else if (!firstVisible) {
+			firstVisible = sec.id;
+		}
+	});
+
+	// 全部为空（如服务未运行）时不隐藏任何页签，避免页签栏空掉
+	if (!firstVisible) {
+		hidden.forEach(function(btn) { btn.classList.remove('et-tab-hidden'); });
+		return;
+	}
+
+	var activeBtn = document.querySelector('.et-tab.active');
+	if (activeBtn && activeBtn.classList.contains('et-tab-hidden')) {
+		document.querySelectorAll('.et-tab').forEach(function(t) { t.classList.remove('active'); });
+		document.querySelectorAll('.et-tab-content').forEach(function(c) { c.classList.remove('active'); });
+		var nb = document.querySelector('.et-tab[data-tab="' + firstVisible + '"]');
+		var nc = document.getElementById('tab_' + firstVisible);
+		if (nb && nc) {
+			nb.classList.add('active');
+			nc.classList.add('active');
+			currentTab = firstVisible;
+		}
+	}
+}
+
+/* 页签总宽超出容器时加渐隐提示 */
+function updateTabsOverflow() {
+	var c = document.querySelector('.et-tabs-container');
+	if (!c) return;
+	c.classList.toggle('tabs-overflow', c.scrollWidth > c.clientWidth + 1);
+}
+
+window.addEventListener('resize', updateTabsOverflow);
 
 // 初始化TAB切换事件
 document.addEventListener('DOMContentLoaded', function() {

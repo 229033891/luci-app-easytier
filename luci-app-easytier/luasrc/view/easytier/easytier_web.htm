@@ -55,8 +55,9 @@ local uci = require "luci.model.uci".cursor()
 	--warning: #FFA726;
 	--hover-bg: #2a2a2a;
 }
-/* 暗色下开关轨道用深色（#ccc 在暗卡上过亮） */
-:root.et-dark .slider {
+/* 暗色下开关轨道用深色（#ccc 在暗卡上过亮）；只作用于未选中态，
+   否则 (0,3,0) 会盖掉 input:checked + .slider 的开启色 */
+:root.et-dark input:not(:checked) + .slider {
 	background-color: var(--border-color);
 }
 
@@ -108,6 +109,27 @@ local uci = require "luci.model.uci".cursor()
 
 .form-group {
 	margin-bottom: 14px;
+}
+
+/* 控制台启用/停用已统一到「状态」页的快捷操作，这里只做提示 */
+.web-hint {
+	margin-bottom: 14px;
+	padding: 8px 10px;
+	background: var(--hover-bg);
+	border-radius: 6px;
+	color: var(--text-secondary);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.web-hint a {
+	color: var(--info);
+	text-decoration: none;
+	font-weight: 500;
+}
+
+.web-hint a:hover {
+	text-decoration: underline;
 }
 
 .form-group label {
@@ -609,19 +631,20 @@ input:disabled + .slider {
 })();
 </script>
 
+<%
+	-- 字段说明折叠成标题右侧的问号 tooltip（模块缺失时自动跳过，页面照常显示）
+	local tips_ok, tips_html = pcall(require, "luci.easytier_tips")
+	if tips_ok and tips_html then write(tips_html) end
+%>
+
 <div class="web-console-container">
 	<div class="web-card">
 		<h3><%:Self-hosted Web Console%></h3>
 
 		<form id="webConsoleForm">
-			<div class="form-group">
-				<div class="checkbox-wrapper">
-					<label for="web_enabled"><%:Enable Self-hosted Web Console%></label>
-					<label class="switch">
-						<input type="checkbox" id="web_enabled" name="web_enabled">
-						<span class="slider"></span>
-					</label>
-				</div>
+			<div class="web-hint">
+				<%:Enable or disable the console from Quick Actions on the Status page%>.&nbsp;
+				<a href="<%=url("admin", "services", "easytier", "status")%>"><%:Go to Status%></a>
 			</div>
 
 			<div class="form-group">
@@ -950,7 +973,6 @@ function loadConfig() {
 	xhr.onload = function() {
 		if (xhr.status === 200) {
 			var data = JSON.parse(xhr.responseText);
-			document.getElementById('web_enabled').checked = data.web_enabled === '1';
 			document.getElementById('web_db_path').value = data.web_db_path || '/etc/easytier/et.db';
 			document.getElementById('web_protocol').value = data.web_protocol || 'udp';
 			document.getElementById('web_port').value = data.web_port || '22020';
@@ -998,7 +1020,6 @@ function loadConfig() {
 
 function getCurrentConfig() {
 	return {
-		web_enabled: document.getElementById('web_enabled').checked ? '1' : '0',
 		web_db_path: document.getElementById('web_db_path').value,
 		web_protocol: document.getElementById('web_protocol').value,
 		web_port: document.getElementById('web_port').value,
@@ -1035,8 +1056,10 @@ function getCurrentConfig() {
 
 function isConfigChanged() {
 	var current = getCurrentConfig();
-	for (var key in originalConfig) {
-		if (originalConfig[key] !== current[key]) {
+	// 按表单字段比较：服务端返回的 web_enabled 已不在表单里（开关移到状态页），
+	// 若按 originalConfig 的键遍历会导致「永远有变更」
+	for (var key in current) {
+		if (String(originalConfig[key]) !== String(current[key])) {
 			return true;
 		}
 	}

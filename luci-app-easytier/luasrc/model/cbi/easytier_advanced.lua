@@ -1,5 +1,11 @@
 m = Map("easytier")
 
+-- 字段说明折叠为悬浮问号 tooltip（省纵向空间）；模块缺失时退回默认的整段说明
+local tips_ok, tips = pcall(require, "luci.easytier_tips")
+if tips_ok and type(tips) == "string" then
+    m.description = tips
+end
+
 -- easytier-core advanced settings
 s=m:section(TypedSection, "easytier")
 s.addremove=false
