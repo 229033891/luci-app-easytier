@@ -1,0 +1,109 @@
+name: Build-LuCI-UI-Only
+
+# 只编 LuCI 前端包（luci-app-easytier + 自动生成的 luci-i18n-easytier-*），
+# 不编 easytier / easytier-noweb 等 core 二进制包。
+#
+# luci-app-easytier 里是 LUCI_PKGARCH:=all（纯 Lua/HTML，与 CPU 架构无关），
+# 所以整个包只需要一个 SDK、跑一个 job，产出的包可以直接装到任意架构。
+#   - SDK 选 SNAPSHOT  -> 产出 .apk（apk-tools 固件，OpenWrt 24.10+/SNAPSHOT）
+#   - SDK 选 22.03.7   -> 产出 .ipk（opkg 固件）
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdk:
+        description: '目标 SDK（SNAPSHOT 出 apk，22.03.7 出 ipk）'
+        required: true
+        default: 'SNAPSHOT'
+        type: choice
+        options:
+          - SNAPSHOT
+          - 22.03.7
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-luci:
+    name: Build LuCI UI (${{ github.event.inputs.sdk }})
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # 与主 workflow 保持一致：默认把 LuCI 语言设为简体中文
+      - name: Create i18n uci-defaults file
+        run: |
+          mkdir -p luci-app-easytier/root/etc/uci-defaults
+          cat > luci-app-easytier/root/etc/uci-defaults/luci-i18n-easytier-zh-cn << 'EOF'
+          #!/bin/sh
+          uci -q batch << EOI
+          set luci.languages.zh_cn='简体中文 (Simplified Chinese)'
+          commit luci
+          EOI
+          rm -f /tmp/luci-indexcache /tmp/luci-modulecache/*
+          exit 0
+          EOF
+          chmod +x luci-app-easytier/root/etc/uci-defaults/luci-i18n-easytier-zh-cn
+
+      - name: Cache OpenWrt SDK
+        uses: actions/cache@v5
+        with:
+          path: |
+            /opt/openwrt-sdk-x86_64-${{ github.event.inputs.sdk }}
+            dl
+          key: sdk-ui-x86_64-${{ github.event.inputs.sdk }}
+
+      # 关键点：PACKAGES 只写 luci-app-easytier，
+      # core 包（easytier / easytier-noweb）不会被 install、也不会被 compile。
+      - name: Building LuCI package
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: x86_64-${{ github.event.inputs.sdk }}
+          FEEDNAME: package_ui
+          PACKAGES: luci-app-easytier
+          NO_REFRESH_CHECK: 1
+          NO_SHFMT_CHECK: 1
+          MAKEFLAGS: -j$(nproc)
+          V: s
+
+      - name: List output & write summary
+        run: |
+          set -e
+          OUT="bin/packages/x86_64/package_ui"
+          echo "### 产物目录：\`$OUT\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          ls -lh "$OUT" || true
+          {
+            echo ""
+            echo '```'
+            ls -1 "$OUT" 2>/dev/null || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          shopt -s nullglob
+          files=("$OUT"/*.apk "$OUT"/*.ipk)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::没有生成任何 .apk/.ipk，请查看上方构建日志"
+            exit 1
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "共 ${#files[@]} 个安装包：" >> "$GITHUB_STEP_SUMMARY"
+          for f in "${files[@]}"; do
+            echo "- \`$(basename "$f")\`" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: luci-app-easytier-ui-${{ github.event.inputs.sdk }}
+          path: |
+            bin/packages/x86_64/package_ui/*.apk
+            bin/packages/x86_64/package_ui/*.ipk
+          if-no-files-found: error
