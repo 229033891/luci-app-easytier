@@ -207,8 +207,9 @@ local uci = require "luci.model.uci".cursor()
 	box-sizing: border-box;
 	width: 100%;
 	max-width: var(--field-width);
-	height: 32px;
-	padding: 6px 10px;
+	/* 与 CBI 表单（常规/高级设置）等高，三个页面的行节奏才一致 */
+	height: 30px;
+	padding: 5px 10px;
 	border: 1px solid var(--border-color);
 	border-radius: 6px;
 	background: var(--card-bg);
@@ -236,7 +237,8 @@ local uci = require "luci.model.uci".cursor()
 	display: block;
 	width: 100%;
 	max-width: var(--field-width);
-	padding: 8px 10px;
+	/* 5px + 20px 文字行 + 5px = 30px，与输入框及 CBI 开关行等高 */
+	padding: 5px 10px;
 	background: var(--hover-bg);
 	border-radius: 6px;
 	transition: background 0.2s;
@@ -271,7 +273,7 @@ local uci = require "luci.model.uci".cursor()
 	width: 38px;
 	height: 20px;
 	right: 10px;
-	top: 8px;
+	top: 5px;
 }
 
 .switch input {
@@ -698,9 +700,9 @@ input:disabled + .slider {
 
 			<div class="form-group">
 				<label for="web_db_path"><%:Database File Path%></label>
-				<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;">
+				<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
 					<input type="text" class="form-control" id="web_db_path" name="web_db_path" placeholder="/etc/easytier/et.db" style="flex:1;min-width:200px;">
-					<button type="button" class="btn" onclick="showResetDbModal()" style="background:var(--error);color:white;padding:8px 12px;white-space:nowrap;">
+					<button type="button" class="btn" onclick="showResetDbModal()" style="background:var(--error);color:white;height:30px;padding:0 12px;box-sizing:border-box;white-space:nowrap;">
 						<%:Reset Database%>
 					</button>
 				</div>
