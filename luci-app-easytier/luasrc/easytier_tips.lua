@@ -1,5 +1,7 @@
 -- 把字段说明文字折叠成标题右侧的悬浮问号，去掉每个字段 2~3 行说明占用的纵向空间；
 -- 说明原文（含 <br>、<strong>、链接）完整保留在浮层里，翻译文案不需要改动。
+-- 同一段样式里还顺手把 CBI 表单的行距从主题默认的 18px 收到 10px（见文末「压缩 CBI 表单行距」），
+-- 因为这两件事都要靠同一份注入到页面的 CSS，分两个模块反而多一份安装文件。
 --
 -- 支持两处结构：
 --   1) LuCI CBI 表单：.cbi-value-description  → 挂到同行的 .cbi-value-title 右侧
@@ -104,6 +106,13 @@ local html = [=[
 	padding: 0 !important;
 	border: 0 !important;
 	min-height: 0 !important;
+}
+/* ===== 压缩 CBI 表单行距 =====
+   bootstrap 主题靠 .cbi-value { margin-bottom: 18px } 撑开行距，这里收到 10px（间距 −44%），
+   控件高度和点击区域不变，只减空白。类名双写是为了压过主题里 .cbi-map .cbi-value 的写法。 */
+.cbi-map .cbi-value,
+.cbi-value.cbi-value {
+	margin-bottom: 10px !important;
 }
 </style>
 <script>
