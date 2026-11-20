@@ -5,8 +5,8 @@ name: Build-LuCI-UI-Only
 #
 # luci-app-easytier 里是 LUCI_PKGARCH:=all（纯 Lua/HTML，与 CPU 架构无关），
 # 所以整个包只需要一个 SDK、跑一个 job，产出的包可以直接装到任意架构。
-#   - SDK 选 SNAPSHOT  -> 产出 .apk（apk-tools 固件，OpenWrt 24.10+/SNAPSHOT）
-#   - SDK 选 22.03.7   -> 产出 .ipk（opkg 固件）
+#   - SDK 选 SNAPSHOT  -> 产出 .apk（apk v3 容器，OpenWrt 25.12+ / SNAPSHOT）
+#   - SDK 选 22.03.7   -> 产出 .ipk（opkg 固件，22.03 / 23.05 / 24.10 都能装）
 
 on:
   workflow_dispatch:
