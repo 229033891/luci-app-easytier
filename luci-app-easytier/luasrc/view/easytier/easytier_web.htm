@@ -16,6 +16,7 @@ local uci = require "luci.model.uci".cursor()
 	--warning: #FF9800;
 	--hover-bg: #f5f5f5;
 	--field-width: 520px;
+	--label-width: 160px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -107,8 +108,50 @@ local uci = require "luci.model.uci".cursor()
 	margin-bottom: 12px;
 }
 
+/* 每个字段一行：标签在左列、控件在右列，与「常规设置」的 CBI 表格保持一致 */
 .form-group {
-	margin-bottom: 14px;
+	display: grid;
+	grid-template-columns: var(--label-width) minmax(0, 1fr);
+	column-gap: 16px;
+	align-items: center;
+	margin-bottom: 10px;
+	/* 整组字段与输入框同宽（标签 + 间距 + 字段宽），
+	   否则卡片变宽时输入框被 --field-width 截住、开关行却铺到卡边，右边缘对不齐 */
+	max-width: calc(var(--label-width) + 16px + var(--field-width));
+}
+
+/* 标签只占左列第一行；开关行（.checkbox-wrapper）自带标题，整行铺满 */
+.form-group > label {
+	grid-column: 1;
+	grid-row: 1;
+	margin-bottom: 0;
+	line-height: 1.4;
+	word-break: break-word;
+}
+
+.form-group > .form-control,
+.form-group > div:not(.checkbox-wrapper) {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+.form-group > .checkbox-wrapper {
+	grid-column: 1 / -1;
+	grid-row: 1;
+	/* 整行铺满时不再受单字段最大宽限制，右边缘才能和输入框对齐 */
+	max-width: none;
+}
+
+/* 说明文字跟在控件下方（右列），不再挤在标签与控件之间 */
+.form-group > .description {
+	grid-column: 2;
+	grid-row: 2;
+	margin-top: 5px;
+}
+
+/* 开关行整行铺满，其说明也对齐整行，避免左侧留空白 */
+.form-group > .checkbox-wrapper ~ .description {
+	grid-column: 1 / -1;
 }
 
 /* 控制台启用/停用已统一到「状态」页的快捷操作，这里只做提示 */
@@ -551,8 +594,14 @@ input:disabled + .slider {
 		margin-bottom: 8px;
 	}
 
+	/* 窄屏放不下两列，回到「标签在上、控件在下」，避免左列把输入框挤窄 */
 	.form-group {
+		display: block;
 		margin-bottom: 10px;
+	}
+
+	.form-group > label {
+		margin-bottom: 5px;
 	}
 
 	.form-control {
